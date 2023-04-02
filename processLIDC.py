@@ -17,6 +17,7 @@ class Patient():
         self.scan = pl.query(pl.Scan).filter(pl.Scan.patient_id == id_patient).first()
         self.vol = self.scan.to_volume()
         self.mask = self.get_mask()
+        self.imgs_scaled = np.array([])
 
     def get_mask(self, print_count=False):
         mask = np.zeros_like(self.vol)
@@ -127,7 +128,7 @@ class Patient():
             print('-----------')
         print('___________________________________')
     
-    def normalice(self, slices= (0, ), plot = False, with_mask = False):
+    def scale(self, slices= (0, ), plot = False, with_mask = False):
         imgs = np.copy(self.vol)  # +mask[:, :, i]*1000
         ## Histograma antes:
         imgs1 = imgs[:,:, list(slices)]
@@ -137,6 +138,7 @@ class Patient():
         mini = np.min(imgs[imgs >=-2000])
         imgs=imgs-mini
         imgs[imgs <=0] = 0
+        self.imgs_scaled = np.log(imgs+1)
         if with_mask is True and plot == True:
             imgs = np.log(imgs+1) + self.mask*3
         else:
@@ -161,15 +163,50 @@ class Patient():
             for i in range(len(slices)):
                 img1 = imgs1[:, :, i]  # +mask[:, :, i]*1000
                 # ## Imagen:
-                plt.imshow(img1)
+                plt.imshow(img1, cmap = 'gray')
                 plt.title('sin escalar')
                 plt.title(f'slice: {i+slices[0]}')
                 plt.show()
                 img2 = imgs2[:, :, i]
-                plt.imshow(img2)
+                plt.imshow(img2, cmap = 'gray')
                 plt.title('escalado')
                 plt.title(f'slice: {i+slices[0]}')
                 plt.show()
+
+    def get_tensors(self, scaled = False):
+        if scaled is False:
+            vol = np.transpose(self.vol, [2, 0, 1]).astype(
+            np.float32)  # each row will be a slice
+            mask = np.transpose(self.mask, [2, 0, 1]).astype(
+                np.float32)  # each row will be a slice
+
+            t_vol = torch.from_numpy(vol)
+            t_mask = torch.from_numpy(mask)
+
+            avg = torch.nn.AvgPool2d(2)
+            images = avg(t_vol)
+            masks = torch.round(avg(t_mask))
+            shape = images.shape
+            images = images.view(shape[0], 1, shape[1], shape[2])
+            images = images.repeat((1, 3, 1, 1))
+            return images, masks
+        else:
+            vol = np.transpose(self.imgs_scaled, [2, 0, 1]).astype(
+            np.float32)  # each row will be a slice
+            mask = np.transpose(self.mask, [2, 0, 1]).astype(
+                np.float32)  # each row will be a slice
+
+            t_vol = torch.from_numpy(vol)
+            t_mask = torch.from_numpy(mask)
+
+            avg = torch.nn.AvgPool2d(2)
+            images = avg(t_vol)
+            masks = torch.round(avg(t_mask))
+            shape = images.shape
+            images = images.view(shape[0], 1, shape[1], shape[2])
+            images = images.repeat((1, 3, 1, 1))
+            return images, masks
             
-            
+        
+        
 
