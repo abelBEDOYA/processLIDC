@@ -36,7 +36,7 @@ class Patient():
         # Generar una matriz binaria aleatoria de 10x10x10
         data = self.mask
         x, y, z = np.where(data == 1)
-        fig = self.__plot_3d(x,y,z)
+        fig = self.__plot_3d(x,y,z,n=0)
         x_min, x_max = 0, self.mask.shape[1]
         y_min, y_max = 0, self.mask.shape[0]
         z_min, z_max = 0, self.mask.shape[2]
@@ -47,11 +47,14 @@ class Patient():
         # fig.title('mascara tumores')
         fig.show()
 
-    def __plot_3d(self, x, y, z):
+    def __plot_3d(self, x, y, z, n=None):
         """
         Plotea en 3d (scater plot) a partir de tres arrays: x, y, z
         Siendo estos las coordenadas de cada punto
         """
+        colors = ['rgba(0, 0, 255, 1)' for i in range(len(z))]
+        if not n is None:
+            colors[-n:] = ['rgba(255, 0, 0, 1)' for i in range(n)]
         # Crea el gráfico de dispersión 3D
         fig = go.Figure(data=[go.Scatter3d(
             x=x, y=y, z=z,
@@ -59,8 +62,9 @@ class Patient():
             marker=dict(
                 size=1,
                 opacity=0.1,
-                colorscale='Viridis',  # Escala de color
-                colorbar=dict(title='Valor de z')  # Leyenda del color
+                # colorscale='Viridis',  # Escala de color
+                # colorbar=dict(title='Valor de z'),  # Leyenda del color
+                color=colors
             )
         )])
 
@@ -96,16 +100,18 @@ class Patient():
                 points['z'] = np.append(points['z'], z)
 
         x, y, z = points['x'], points['y'], points['z']
-
+        n = None
         if nodulos == True:
+            
             x_m, y_m, z_m = np.where(self.mask == 1)
+            n = len(x_m)
             x = np.append(x, x_m)
             y = np.append(y, y_m)
             z = np.append(z, z_m)
 
         x, y, z = x*self.scan.pixel_spacing, y*self.scan.pixel_spacing, z*self.scan.slice_spacing
         print(len(points['x']))
-        fig = self.__plot_3d(x, y, z)
+        fig = self.__plot_3d(x, y, z, n=n)
         fig.show()
 
     def get_all_nodules(self, plot = False):
