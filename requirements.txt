@@ -1,0 +1,12 @@
+numpy
+matplotlib
+opencv-python
+torch
+torchvision
+opencv-python
+pillow
+sklearn
+scikit-image
+tqdm
+pylidc
+pydicom
