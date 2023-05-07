@@ -1,1 +1,19 @@
+
+## Descargar el programa que gestiona la descarga
+!wget -P /content/NBIA-Data-Retriever https://cbiit-download.nci.nih.gov/nbia/releases/ForTCIA/NBIADataRetriever_4.4/nbia-data-retriever-4.4.deb
+
+## Ejecutar el .deb
+!dpkg -i /content/NBIA-Data-Retriever/nbia-data-retriever-4.4.deb
+
+
+
+## Con el manifest en: /home/abel/github/processLIDC/manifests/manifest-1683454688195.tcia
+## El programa en: /opt/nbia-data-retriever/nbia-data-retriever
+## El dataset se descargara en: /home/abel/lidc-dataset
 /opt/nbia-data-retriever/nbia-data-retriever --cli '/home/abel/github/processLIDC/manifests/manifest-1683454688195.tcia' -d /home/abel/lidc-dataset
+
+
+
+
+## Todo esto esta en el notebook:
+https://colab.research.google.com/github/kirbyju/TCIA_Notebooks/blob/main/TCIA_Linux_Data_Retriever_App.ipynb#scrollTo=B714bOkDk8kd
