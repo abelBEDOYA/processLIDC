@@ -1,0 +1,1 @@
+/opt/nbia-data-retriever/nbia-data-retriever --cli '/home/abel/github/processLIDC/manifests/manifest-1683454688195.tcia' -d /home/abel/lidc-dataset
