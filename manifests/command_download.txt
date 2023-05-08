@@ -1,8 +1,8 @@
 
-## Descargar el programa que gestiona la descarga
+## Descargar el programa que gestiona la descarga (esta hecho ya)
 !wget -P /content/NBIA-Data-Retriever https://cbiit-download.nci.nih.gov/nbia/releases/ForTCIA/NBIADataRetriever_4.4/nbia-data-retriever-4.4.deb
 
-## Ejecutar el .deb
+## Ejecutar el .deb (hace falta sudo)
 !dpkg -i /content/NBIA-Data-Retriever/nbia-data-retriever-4.4.deb
 
 
