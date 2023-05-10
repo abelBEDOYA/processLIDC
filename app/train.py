@@ -48,7 +48,8 @@ def get_val_loss(model, val_patients, loss_fn, batch_size=4):
             
             # Obtenemos los tensores:
             imgs, mask = patient.get_tensors(scaled=True)
-            
+            if torch.cuda.is_available():
+                imgs, mask = imgs.to(torch.cuda.FloatTensor), mask.to(torch.cuda.FloatTensor)
             # Preparamos tensores para recorrerlos:
             # primera = 2
             # ultima = 10
@@ -155,7 +156,9 @@ def train(model, n_epochs:int =4,
             
             # Obtenemos los tensores:
             imgs, mask = patient.get_tensors(scaled=True)
-            
+            if torch.cuda.is_available():
+                imgs, mask = imgs.to(torch.cuda.FloatTensor), mask.to(torch.cuda.FloatTensor)
+
             # Preparamos tensores para recorrerlos:
             # primera = 2
             # ultima = 10
