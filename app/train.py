@@ -93,10 +93,14 @@ def plot(data, show=False, path_save=None):
 
 
 def save_model(model, path='./', model_name='model'):
-
-    # Guardar el modelo
-    torch.save(model.state_dict(), path+model_name+'.pth')
-    print('Modelo: {}{}.pth guardado.'.format(path, model_name))
+    if path[-1]=='/':
+        # Guardar el modelo
+        torch.save(model.state_dict(), path+model_name+'.pth')
+        print('Modelo: {}{}.pth guardado.'.format(path, model_name))
+    else:
+        path = path+'/'
+        torch.save(model.state_dict(), path+model_name+'.pth')
+        print('Modelo: {}{}.pth guardado.'.format(path, model_name))
 
 def train(model, n_epochs:int =4, 
           batch_size: int = 4, 
@@ -201,26 +205,59 @@ def train(model, n_epochs:int =4,
     else:
         plot(data_dict, show=plot_metrics)
             
-        
-if __name__=='main__':
-    parser = argparse.ArgumentParser()
+def checks_alright(args):
+    if not args.n_epochs > 0 and not isinstance(args.n_epochs, int):
+        raise ValueError("n_epochs no es entero y >0")
+    if not args.batch_size > 0 and not isinstance(args.batch_size, int):
+        raise ValueError("batch_size no es entero y >0")
+    
+    # print(args.val_split > 0 and not args.val_split < 1 and isinstance(args.val_split, float))
+    if not args.val_split > 0 and not args.val_split < 1 and not isinstance(args.val_split, float):
+        print('fallooooo')
+        raise ValueError("val_split no es float y >0 y >1")
+    
+    try:
+        if not os.path.exists(args.path2dataset):
+            raise ValueError("La ruta al dataset, path2dataset, esta mal")
+    except:
+        raise ValueError("La ruta al dataset, path2dataset, esta mal")
+    try:
+        if not os.path.exists(args.path2savefiles):
+            raise ValueError("La ruta a donde se guardaran los archivos, path2savefiles, esta mal")
+    except:
+        raise ValueError("La ruta a donde se guardaran los archivos, path2savefiles, esta mal")
+    
+    if not isinstance(args.plot_metrics, bool):
+        raise ValueError("save_plots no es booleano")
+    
+    if not isinstance(args.plot_metrics, bool):
+        raise ValueError("save_plots no es booleano")
+    
+    if not isinstance(args.save_epochs, int):
+        if  args.save_epochs > 0 and not args.save_epochs < args.n_epochs:
+            raise ValueError("save_epochs no es entero y >0 y menos que n_epochs")
 
+
+
+if __name__=='__main__':
+    parser = argparse.ArgumentParser()
     # Agregar los argumentos necesarios
     parser.add_argument('--n_epochs', type=int, default=4)
     parser.add_argument('--batch_size', type=int, default=4)
     parser.add_argument('--val_split', type=float, default=0.2)
     parser.add_argument('--path2dataset', type=str, default='../../manifest-1675801116903/LIDC-IDRI/')
     parser.add_argument('--path2savefiles', type=str, default='./')
-    parser.add_argument('--plot_metrics', action='store_true')
-    parser.add_argument('--save_plots', action='store_true')
+    parser.add_argument('--plot_metrics', action='store_true', default = False)
+    parser.add_argument('--save_plots', action='store_true', default = True)
     parser.add_argument('--save_epochs', type=int, default=None)
 
     # Obtener los argumentos proporcionados por el usuario
     args = parser.parse_args()
-    
+    checks_alright(args)
     # Descargamos el modelo preentrenado:
     model = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
                        in_channels=3, out_channels=1, init_features=32, pretrained=True)
+    
     
     # Llamar a la función train con los argumentos
     train(model, n_epochs=args.n_epochs, batch_size=args.batch_size, val_split=args.val_split,
