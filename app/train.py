@@ -161,7 +161,6 @@ def train(model, n_epochs:int =4,
             # ultima = 10
             # dataset = TensorDataset(imgs[primera:ultima], mask[primera:ultima])
             dataset = TensorDataset(imgs, mask)
-            
 
             train_loader = DataLoader(dataset,batch_size=batch_size, shuffle=True)
             loss_batch = np.array([])
@@ -182,11 +181,19 @@ def train(model, n_epochs:int =4,
 
             loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
             patient_loss_history = np.append(patient_loss_history, np.mean(np.array(loss_batch)))
-            
+            print(os.system('date'))
         epoch_loss_history = np.append(epoch_loss_history, np.mean(np.array(loss_patient)))
         if save_epochs is not None:
             if epoch//save_epochs == epoch/save_epochs:
                 save_model(model, path2savefiles, model_name= 'model-epoch{}'.format(epoch))
+                if save_plots and epoch>1:
+                    data_dict ={
+                        'epoch_loss_history': epoch_loss_history,
+                        'batch_loss_history': batch_loss_history,
+                        'patient_loss_history': patient_loss_history,
+                        'epoch_val_loss_history': epoch_val_loss_history
+                        }
+                    plot(data_dict, show=plot_metrics, path_save=path2savefiles)
         # # Calculemos el loss del val:
         val_loss = get_val_loss(model, val_patients, loss_fn, batch_size)
         epoch_val_loss_history = np.append(epoch_val_loss_history, val_loss)
@@ -257,7 +264,9 @@ if __name__=='__main__':
     # Descargamos el modelo preentrenado:
     model = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
                        in_channels=3, out_channels=1, init_features=32, pretrained=True)
-    
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+        model = model.to(device)
     
     # Llamar a la función train con los argumentos
     train(model, n_epochs=args.n_epochs, batch_size=args.batch_size, val_split=args.val_split,
