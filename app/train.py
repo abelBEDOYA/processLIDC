@@ -177,7 +177,7 @@ def train(model, n_epochs:int =4,
             inicio = time.time()
             time.sleep(1)
             
-            tqdm_train_patients.set_description('{}. Rate {} s/p. Progreso de la epoca:'.format(get_tiempo(), round(sum(tiempos_paciente)/5, 2),id_pat))
+            tqdm_train_patients.set_description('{}. Rate {} s/p. {}. Progreso de la epoca:'.format(get_tiempo(), round(sum(tiempos_paciente)/5, 2),id_pat))
             # Cargamos datos de un paciente:
             patient = Patient(id_pat)
 
