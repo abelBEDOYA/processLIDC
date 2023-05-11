@@ -311,7 +311,7 @@ if __name__=='__main__':
     args = parser.parse_args()
     checks_alright(args)
 
-    archivo = open('nombre_archivo.txt', 'r')  # Reemplaza 'nombre_archivo.txt' por el nombre de tu archivo
+    archivo = open('./failed_patients.txt', 'r')  # Reemplaza 'nombre_archivo.txt' por el nombre de tu archivo
 
     failed_patients = []
 
