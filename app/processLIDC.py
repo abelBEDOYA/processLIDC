@@ -9,18 +9,10 @@ import plotly.graph_objects as go
 import numpy as np
 from mayavi import mlab
 import cv2
-import sys
 
-# class CustomStdout(object):
-#     def write(self, message):
-#         if "Loading dicom files ... This may take a moment" in message:
-#             return
-#         sys.__stdout__.write(message)
-        
-        
+
 class Patient():
     def __init__(self, id_patient):
-        # sys.stdout = CustomStdout()
         self.id_patient = id_patient
         self.scan = pl.query(pl.Scan).filter(pl.Scan.patient_id == id_patient).first()
         self.vol = self.scan.to_volume(verbose=False)

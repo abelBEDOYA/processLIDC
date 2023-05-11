@@ -13,6 +13,7 @@ from collections import deque
 from processLIDC import Patient
 import datetime
 
+random.seed(123)
 
 def train_val_split(patients_list, val_split):
     """TOma la lsita de pacientes list(str) y hace la separacion
@@ -134,7 +135,8 @@ def train(model, n_epochs:int =4,
           path2savefiles: str = './',
           plot_metrics: bool = False,
           save_plots: bool = False,
-          save_epochs = None):
+          save_epochs = None,
+          failed_patients: list = []):
     """Ejecuta el entrenamiento
 
     Args:
@@ -147,7 +149,7 @@ def train(model, n_epochs:int =4,
         save_plots: bool = False)
     """
     patients = os.listdir(path2dataset)
-    patients = [pat for pat in patients if not pat=='LICENSE']
+    patients = [pat for pat in patients if not pat=='LICENSE' and pat not in failed_patients]
 
     train_patients, val_patients = train_val_split(patients, val_split)
     # Definir función de pérdida
@@ -240,7 +242,7 @@ def train(model, n_epochs:int =4,
                         'patient_loss_history': patient_loss_history,
                         'epoch_val_loss_history': epoch_val_loss_history
                         }
-                    plot(data_dict, show=plot_metrics, path_save=path2savefiles, name_plot= 'loss_epoch {}'.format(epoch+1))
+                    plot(data_dict, show=plot_metrics, path_save=path2savefiles, name_plot= 'loss_epoch_{}'.format(epoch+1))
 
         print('Train Epoch: {}\t Train Loss: {:.6f}. Val Loss: {:.6f}'.format(
             epoch+1, epoch_loss_history[-1], epoch_val_loss_history[-1]))
@@ -309,6 +311,14 @@ if __name__=='__main__':
     args = parser.parse_args()
     checks_alright(args)
 
+    archivo = open('nombre_archivo.txt', 'r')  # Reemplaza 'nombre_archivo.txt' por el nombre de tu archivo
+
+    failed_patients = []
+
+    for linea in archivo:
+        linea = linea.strip()  # Elimina los espacios en blanco al principio y al final de la línea
+        failed_patients.append(linea)
+    archivo.close()
     print('Descargando el modelo...')
     # Descargamos el modelo preentrenado:
     model = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
@@ -321,7 +331,7 @@ if __name__=='__main__':
     train(model, n_epochs=args.n_epochs, batch_size=args.batch_size, val_split=args.val_split,
         path2dataset=args.path2dataset, path2savefiles=args.path2savefiles,
         plot_metrics=args.plot_metrics, save_plots=args.save_plots,
-        save_epochs=args.save_epochs)
+        save_epochs=args.save_epochs, failed_patients=failed_patients)
         
         
         
