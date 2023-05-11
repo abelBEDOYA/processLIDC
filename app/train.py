@@ -8,7 +8,7 @@ from tqdm import tqdm
 import random
 import argparse
 import time
-
+from collections import deque
 # Mi libreria:
 from processLIDC import Patient
 import datetime
@@ -166,6 +166,7 @@ def train(model, n_epochs:int =4,
     epoch_loss_history = np.array([])
     epoch_loss_history = np.array([])
     epoch_val_loss_history = np.array([])
+    tiempos_paciente = deque([6,6,6,6,6], maxlen=5)
     print('Inicio de entrenamiento: {}'.format(get_tiempo()))
     for epoch in range(n_epochs):
         print(f'Epoch: {epoch+1}/{n_epochs}')
@@ -173,9 +174,10 @@ def train(model, n_epochs:int =4,
         random.shuffle(train_patients)
         tqdm_train_patients = tqdm(train_patients,leave=False, position=0)
         for id_pat in tqdm_train_patients:
+            inicio = time.time()
             time.sleep(1)
             
-            tqdm_train_patients.set_description('{}. {}. Progreso de la epoca:'.format(get_tiempo(),id_pat))
+            tqdm_train_patients.set_description('{}. Rate {} s/p. Progreso de la epoca:'.format(get_tiempo(), round(sum(tiempos_paciente)/5, 2),id_pat))
             # Cargamos datos de un paciente:
             patient = Patient(id_pat)
 
@@ -213,7 +215,9 @@ def train(model, n_epochs:int =4,
 
             loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
             patient_loss_history = np.append(patient_loss_history, np.mean(np.array(loss_batch)))
-
+            tiempo_paciente = time.time()-inicio
+            tiempos_paciente.append(tiempo_paciente)
+            
         epoch_loss_history = np.append(epoch_loss_history, np.mean(np.array(loss_patient)))
         print('Fin epoca {}: {}'.format(epoch+1, get_tiempo()))
 
