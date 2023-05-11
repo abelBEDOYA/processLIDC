@@ -60,10 +60,10 @@ def get_val_loss(model, val_patients, loss_fn, batch_size=4):
             device = torch.device('cuda')
             imgs, mask = imgs.to(device), mask.to(device)
         # Preparamos tensores para recorrerlos:
-        primera = 2
-        ultima = 10
-        dataset = TensorDataset(imgs[primera:ultima], mask[primera:ultima])
-        # dataset = TensorDataset(imgs, mask)
+        # primera = 2
+        # ultima = 10
+        # dataset = TensorDataset(imgs[primera:ultima], mask[primera:ultima])
+        dataset = TensorDataset(imgs, mask)
         
 
         train_loader = DataLoader(dataset,batch_size=batch_size, shuffle=True)
@@ -189,10 +189,10 @@ def train(model, n_epochs:int =4,
                 imgs, mask = imgs.to(device), mask.to(device)
 
             # Preparamos tensores para recorrerlos:
-            primera = 2
-            ultima = 10
-            dataset = TensorDataset(imgs[primera:ultima], mask[primera:ultima])
-            # dataset = TensorDataset(imgs, mask)
+            # primera = 2
+            # ultima = 10
+            # dataset = TensorDataset(imgs[primera:ultima], mask[primera:ultima])
+            dataset = TensorDataset(imgs, mask)
 
             train_loader = DataLoader(dataset,batch_size=batch_size, shuffle=True)
             loss_batch = np.array([])
