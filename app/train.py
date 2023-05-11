@@ -172,12 +172,17 @@ def train(model, n_epochs:int =4,
         print(f'Epoch: {epoch+1}/{n_epochs}')
         loss_patient = np.array([])
         random.shuffle(train_patients)
+        len_train_patients = len(train_patients)
         tqdm_train_patients = tqdm(train_patients,leave=False, position=0)
-        for id_pat in tqdm_train_patients:
+        for i, id_pat in enumerate(tqdm_train_patients):
             inicio = time.time()
             time.sleep(1)
             
-            tqdm_train_patients.set_description('{}. Rate {} s/p. {}. Progreso de la epoca:'.format(get_tiempo(), round(sum(tiempos_paciente)/5, 2),id_pat))
+            tqdm_train_patients.set_description('{}. Rate {} s/p. {}/{}. {}. Progreso de la epoca:'.format(get_tiempo(), 
+                                                                                                           round(sum(tiempos_paciente)/5, 2),
+                                                                                                           i,
+                                                                                                           len_train_patients,
+                                                                                                           id_pat))
             # Cargamos datos de un paciente:
             patient = Patient(id_pat)
 
