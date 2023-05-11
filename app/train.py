@@ -7,9 +7,12 @@ import os
 from tqdm import tqdm
 import random
 import argparse
+import time
 
 # Mi libreria:
 from processLIDC import Patient
+import datetime
+
 
 def train_val_split(patients_list, val_split):
     """TOma la lsita de pacientes list(str) y hace la separacion
@@ -38,42 +41,48 @@ def get_val_loss(model, val_patients, loss_fn, batch_size=4):
     loss_batch = np.array([])
     batch_loss_history = np.array([])
     loss_patient = np.array([])
+    print('Realizando validacion...')
+    tqdm_val_patients = tqdm(val_patients,leave=False, position=0)
+    for id_pat in tqdm_val_patients:
+        time.sleep(1)
+        
+        tqdm_val_patients.set_description('{}. {}. Progreso val.:'.format(get_tiempo(),id_pat))
+        
+        # Cargamos datos de un paciente:
+        patient = Patient(id_pat)
+        
+        # Escalamos:
+        patient.scale()
+        
+        # Obtenemos los tensores:
+        imgs, mask = patient.get_tensors(scaled=True)
+        if torch.cuda.is_available():
+            device = torch.device('cuda')
+            imgs, mask = imgs.to(device), mask.to(device)
+        # Preparamos tensores para recorrerlos:
+        primera = 2
+        ultima = 10
+        dataset = TensorDataset(imgs[primera:ultima], mask[primera:ultima])
+        # dataset = TensorDataset(imgs, mask)
+        
 
-    for id_pat in val_patients:
-            # Cargamos datos de un paciente:
-            patient = Patient(id_pat)
-            
-            # Escalamos:
-            patient.scale()
-            
-            # Obtenemos los tensores:
-            imgs, mask = patient.get_tensors(scaled=True)
-            if torch.cuda.is_available():
-                device = torch.device('cuda')
-                imgs, mask = imgs.to(device), mask.to(device)
-            # Preparamos tensores para recorrerlos:
-            # primera = 2
-            # ultima = 10
-            # dataset = TensorDataset(imgs[primera:ultima], mask[primera:ultima])
-            dataset = TensorDataset(imgs, mask)
-            
+        train_loader = DataLoader(dataset,batch_size=batch_size, shuffle=True)
+        loss_batch = np.array([])
+        for batch_idx, (data, target) in enumerate(train_loader):
 
-            train_loader = DataLoader(dataset,batch_size=batch_size, shuffle=True)
-            loss_batch = np.array([])
-            for batch_idx, (data, target) in enumerate(train_loader):
+            # # Forward pass
+            output = model(data)
+            # Calcular pérdida
+            loss = loss_fn(output[:,0], target)
+            loss_batch = np.append(loss_batch, loss.item())
+            batch_loss_history = np.append(batch_loss_history, loss.item())
 
-                # # Forward pass
-                output = model(data)
-                # Calcular pérdida
-                loss = loss_fn(output[:,0], target)
-                loss_batch = np.append(loss_batch, loss.item())
-                batch_loss_history = np.append(batch_loss_history, loss.item())
-
-            loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
+        loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
     val_mean_loss = np.mean(loss_patient)
     return val_mean_loss
 
-def plot(data, show=False, path_save=None):
+
+def plot(data, show=False, path_save=None, name_plot='loss_plot'):
     epoch_loss_history = data['epoch_loss_history']
     batch_loss_history = data['batch_loss_history']
     patient_loss_history = data['patient_loss_history']
@@ -88,21 +97,35 @@ def plot(data, show=False, path_save=None):
     plt.ylabel('Loss')
     plt.legend(loc = 'best', frameon=True)
     if path_save is not None:
-        plt.savefig(path_save+'loss_plot.png', dpi=300)
+        plt.savefig(path_save+'{}.png'.format(name_plot), dpi=300)
+        print('Loss plots guardados')
     if show:
         plt.show()
-
 
 
 def save_model(model, path='./', model_name='model'):
     if path[-1]=='/':
         # Guardar el modelo
         torch.save(model.state_dict(), path+model_name+'.pth')
-        print('Modelo: {}{}.pth guardado.'.format(path, model_name))
+        print('Modelo {}{}.pth guardado.'.format(path, model_name))
     else:
         path = path+'/'
         torch.save(model.state_dict(), path+model_name+'.pth')
-        print('Modelo: {}{}.pth guardado.'.format(path, model_name))
+        print('Modelo {}{}.pth guardado.'.format(path, model_name))
+
+
+def get_tiempo():
+    fecha_hora_actual = datetime.datetime.now()
+    # Obtener partes individuales de la fecha y hora
+    anio = fecha_hora_actual.year
+    mes = fecha_hora_actual.month
+    dia = fecha_hora_actual.day
+    hora = fecha_hora_actual.hour
+    minuto = fecha_hora_actual.minute
+    segundo = fecha_hora_actual.second
+    tiempo = '{}-{}-{}. {}:{}:{}'.format(anio, mes, dia, hora, minuto, round(segundo))
+    return tiempo
+
 
 def train(model, n_epochs:int =4, 
           batch_size: int = 4, 
@@ -143,18 +166,22 @@ def train(model, n_epochs:int =4,
     epoch_loss_history = np.array([])
     epoch_loss_history = np.array([])
     epoch_val_loss_history = np.array([])
+    print('Inicio de entrenamiento: {}'.format(get_tiempo()))
     for epoch in range(n_epochs):
         print(f'Epoch: {epoch+1}/{n_epochs}')
         loss_patient = np.array([])
         random.shuffle(train_patients)
-        for id_pat in tqdm(train_patients):
-            print('Cargando paciente: {}'.format(id_pat))
+        tqdm_train_patients = tqdm(train_patients,leave=False, position=0)
+        for id_pat in tqdm_train_patients:
+            time.sleep(1)
+            
+            tqdm_train_patients.set_description('{}. {}. Progreso de la epoca:'.format(get_tiempo(),id_pat))
             # Cargamos datos de un paciente:
             patient = Patient(id_pat)
-            
+
             # Escalamos:
             patient.scale()
-            
+
             # Obtenemos los tensores:
             imgs, mask = patient.get_tensors(scaled=True)
             if torch.cuda.is_available():
@@ -162,10 +189,10 @@ def train(model, n_epochs:int =4,
                 imgs, mask = imgs.to(device), mask.to(device)
 
             # Preparamos tensores para recorrerlos:
-            # primera = 2
-            # ultima = 10
-            # dataset = TensorDataset(imgs[primera:ultima], mask[primera:ultima])
-            dataset = TensorDataset(imgs, mask)
+            primera = 2
+            ultima = 10
+            dataset = TensorDataset(imgs[primera:ultima], mask[primera:ultima])
+            # dataset = TensorDataset(imgs, mask)
 
             train_loader = DataLoader(dataset,batch_size=batch_size, shuffle=True)
             loss_batch = np.array([])
@@ -186,25 +213,30 @@ def train(model, n_epochs:int =4,
 
             loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
             patient_loss_history = np.append(patient_loss_history, np.mean(np.array(loss_batch)))
-            print(os.system('date'))
+
         epoch_loss_history = np.append(epoch_loss_history, np.mean(np.array(loss_patient)))
+        print('Fin epoca {}: {}'.format(epoch+1, get_tiempo()))
+
+        # # Calculemos el loss del val:
+        val_loss = get_val_loss(model, val_patients, loss_fn, batch_size)
+        epoch_val_loss_history = np.append(epoch_val_loss_history, val_loss)
+
         if save_epochs is not None:
-            if epoch//save_epochs == epoch/save_epochs:
+            if epoch//save_epochs == epoch/save_epochs and epoch>1:
                 save_model(model, path2savefiles, model_name= 'model-epoch{}'.format(epoch))
-                if save_plots and epoch>1:
+                if save_plots:
                     data_dict ={
                         'epoch_loss_history': epoch_loss_history,
                         'batch_loss_history': batch_loss_history,
                         'patient_loss_history': patient_loss_history,
                         'epoch_val_loss_history': epoch_val_loss_history
                         }
-                    plot(data_dict, show=plot_metrics, path_save=path2savefiles)
-        # # Calculemos el loss del val:
-        val_loss = get_val_loss(model, val_patients, loss_fn, batch_size)
-        epoch_val_loss_history = np.append(epoch_val_loss_history, val_loss)
+                    plot(data_dict, show=plot_metrics, path_save=path2savefiles, name_plot= 'loss_epoch {}'.format(epoch+1))
+
         print('Train Epoch: {}\t Train Loss: {:.6f}. Val Loss: {:.6f}'.format(
-            epoch, epoch_loss_history[-1], epoch_val_loss_history[-1]))
+            epoch+1, epoch_loss_history[-1], epoch_val_loss_history[-1]))
         print('-----------------------------------')
+    print('Fin de entrenamiento: {}'.format(get_tiempo()))
     data_dict ={
                 'epoch_loss_history': epoch_loss_history,
                 'batch_loss_history': batch_loss_history,
@@ -216,7 +248,8 @@ def train(model, n_epochs:int =4,
         plot(data_dict, show=plot_metrics, path_save=path2savefiles)
     else:
         plot(data_dict, show=plot_metrics)
-            
+    
+
 def checks_alright(args):
     if not args.n_epochs > 0 and not isinstance(args.n_epochs, int):
         raise ValueError("n_epochs no es entero y >0")
@@ -266,6 +299,8 @@ if __name__=='__main__':
     # Obtener los argumentos proporcionados por el usuario
     args = parser.parse_args()
     checks_alright(args)
+
+    print('Descargando el modelo...')
     # Descargamos el modelo preentrenado:
     model = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
                        in_channels=3, out_channels=1, init_features=32, pretrained=True)
