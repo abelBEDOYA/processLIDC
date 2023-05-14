@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 import numpy as np
 from mayavi import mlab
 import cv2
-
+import math
 
 class Patient():
     def __init__(self, id_patient):
@@ -135,6 +135,9 @@ class Patient():
         print('___________________________________')
     
     def scale(self, slices= (0, ), plot = False, with_mask = False):
+        """Sirve para escalar los datos y que se guarden en el atributo
+        self.imgs_scaled. Aunque tambien vale para comparar con y sin
+        escalado las imagen y su histograma de valores."""
         imgs = np.copy(self.vol)  # +mask[:, :, i]*1000
         ## Histograma antes:
         imgs1 = imgs[:,:, list(slices)]
@@ -176,8 +179,84 @@ class Patient():
                 img2 = imgs2[:, :, i]
                 plt.imshow(img2, cmap = 'gray')
                 plt.title('escalado')
-                plt.title(f'slice: {i+slices[0]}')
+                plt.title(f'slice: {slices[0]}')
                 plt.show()
+
+    def predict(self, model, slices=(0,), scaled=True):
+        if scaled:
+            images, mask = self.get_tensors(scaled=True)
+            pred = model(images[slices[0]:slices[-1]+1,:,:])
+            
+        else:
+            images, mask = self.get_tensors(scaled=False)
+            pred = model(images[slices[0]:slices[-1]+1,:,:])
+        pred = torch.round(pred).detach().numpy()
+        return pred
+
+    def imshow(self, slices=(0,), label=True, scaled=True, model = None, path2save=None):
+        print('obteniendo los datos...')
+        images, mask = self.get_tensors(scaled=True)
+        images = images.detach().numpy()
+        mask = mask.detach().numpy()
+        mask = [mask[i] for i in slices]
+        
+        if scaled:
+            images = [images[i] for i in slices]
+        else:
+            images = [images[i] for i in slices]
+
+        num_images = len(slices)
+        rows = int(math.sqrt(num_images))+1
+        cols = math.ceil(num_images / rows)
+        
+        fig, axes = plt.subplots(rows, cols, figsize=(10, 10))
+        axes = axes.flatten()
+        # print(self.mask.shape)
+        if model is not None:
+            print('realizando inferencia...')
+            legend_labels_pred = ['Predicción']
+            pred = self.predict(model, slices=slices, scaled=True)
+            
+        legend_labels_label = ['Etiqueta']
+        for i, image in enumerate(images):
+            axes[i].imshow(image[0,:,:])
+            axes[i].axis('off')
+            axes[i].set_title('Slice {}'.format(slices[i]))
+            if model is not None:
+                contours = axes[i].contour(pred[i,0], levels=[0.5], colors='r')
+                axes[i].clabel(contours, inline=True, fontsize=8)
+                # axes[i].legend(legend_labels_pred, loc='upper right')
+        
+            if label:
+                contours = axes[i].contour(mask[i], levels=[0.5], colors='blue')
+                axes[i].clabel(contours, inline=True, fontsize=8)
+                # axes[i].legend(legend_labels_label, loc='upper right')
+        # if model is not None:
+        #     fig.legend([contours.collections[0]], legend_labels_pred, loc='lower right')  # , facecolor=color_pred)
+        # if label:
+        #     fig.legend([contours.collections[0]], legend_labels_label, loc='lower right')  # , facecolor=color_label)
+        # fig.legend([contours.collections], legend_labels_label, loc='lower right')
+        fig.legend()
+        # if label and model is not None:
+        #     legend_labels = legend_labels_pred + legend_labels_label
+        #     fig.legend(legend_labels, loc='upper right')
+        # elif label:
+        #     legend_labels = legend_labels_label
+        #     fig.legend(legend_labels, loc='upper right')
+        
+        # Elimina los ejes no utilizados si hay menos imágenes que subplots
+        if num_images < len(axes):
+            for j in range(num_images, len(axes)):
+                fig.delaxes(axes[j])
+        fig.suptitle('{}'.format(self.id_patient))
+        plt.tight_layout()
+        plt.show()
+        if path2save is not None:
+            fig.set_facecolor('white')
+            path = '{}/pred_grid_{}.png'.format(path2save, self.id_patient)
+            fig.savefig('{}'.format(path), dpi=300, bbox_inches='tight')
+            print('figura {} guardada'.format(path))
+        
 
     def get_tensors(self, scaled = False):
         if scaled is False:
