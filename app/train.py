@@ -95,13 +95,14 @@ def plot(data, show=False, path_save=None, name_plot='loss_plot'):
     plt.plot(np.linspace(1, n_epochs, n_epochs), np.log(np.array(epoch_val_loss_history)), label='Val. Epoch Loss')
     plt.title('Loss: Binary Cross Entropy')
     plt.xlabel('Epoch')
-    plt.ylabel('Loss')
+    plt.ylabel('log(loss)')
     plt.legend(loc = 'best', frameon=True)
     if path_save is not None:
         plt.savefig(path_save+'{}.png'.format(name_plot), dpi=300)
         print('Loss plots guardados')
     if show:
         plt.show()
+    plt.close('all')
 
 
 def save_model(model, path='./', model_name='model'):
