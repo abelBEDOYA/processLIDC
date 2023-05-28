@@ -182,18 +182,23 @@ class Patient():
                 plt.title(f'slice: {slices[0]}')
                 plt.show()
 
-    def predict(self, model, slices=(0,), scaled=True):
-        if scaled:
-            images, mask = self.get_tensors(scaled=True)
-            pred = model(images[slices[0]:slices[-1]+1,:,:])
-            
+    def predict(self, model, slices=(0,), scaled=True, gpu = True):
+        images, mask = self.get_tensors(scaled=True)
+        if torch.cuda.is_available() and gpu:
+            device = torch.device('cuda')
+            images, mask = images[slices[0]:slices[-1]+1,:,:].to(device), mask[slices[0]:slices[-1]+1,:,:].to(device)
+            pred = model(images)
         else:
-            images, mask = self.get_tensors(scaled=False)
             pred = model(images[slices[0]:slices[-1]+1,:,:])
-        pred = torch.round(pred).detach().numpy()
+        if gpu:
+            pred = pred.cpu().detach().numpy()
+        else:
+            pred = pred.detach().numpy()
         return pred
 
-    def imshow(self, slices=(0,), label=True, scaled=True, model = None, path2save=None):
+    def imshow(self, slices=(0,), label=True, scaled=True, model = None, thresholds = (0.5, ), path2save=None, gpu = True):
+        """gpu = True es par aindicar que el modelo ha sido entrenado con la grafica y por tanto,
+        el tnsor de datos qu debe comerse es de cuda tensor"""
         print('obteniendo los datos...')
         images, mask = self.get_tensors(scaled=True)
         images = images.detach().numpy()
@@ -215,7 +220,7 @@ class Patient():
         if model is not None:
             print('realizando inferencia...')
             legend_labels_pred = ['Predicción']
-            pred = self.predict(model, slices=slices, scaled=True)
+            pred = self.predict(model, slices=slices, scaled=True, gpu=gpu)
             
         legend_labels_label = ['Etiqueta']
         for i, image in enumerate(images):
@@ -223,7 +228,7 @@ class Patient():
             axes[i].axis('off')
             axes[i].set_title('Slice {}'.format(slices[i]))
             if model is not None:
-                contours = axes[i].contour(pred[i,0], levels=[0.5], colors='r')
+                contours = axes[i].contour(pred[i,0], levels=thresholds, colors='r')
                 axes[i].clabel(contours, inline=True, fontsize=8)
                 # axes[i].legend(legend_labels_pred, loc='upper right')
         
