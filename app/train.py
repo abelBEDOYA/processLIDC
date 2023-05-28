@@ -105,15 +105,24 @@ def plot(data, show=False, path_save=None, name_plot='loss_plot'):
     plt.close('all')
 
 
-def save_model(model, path='./', model_name='model'):
+def save_model(model, path='./', model_name='model', extension = '.pt'):
+    if extension in ['.pt', '.pth']:
+        pass
+    else:
+        extension = '.pt'
+        
     if path[-1]=='/':
-        # Guardar el modelo
-        torch.save(model.state_dict(), path+model_name+'.pth')
-        print('Modelo {}{}.pth guardado.'.format(path, model_name))
+        pass
     else:
         path = path+'/'
+        
+    # Guardar el modelo
+    if extension == '.pt':
+        model_scripted = torch.jit.script(model) # Export to TorchScript
+        model_scripted.save(path+model_name+'.pt') # Save
+    else:
         torch.save(model.state_dict(), path+model_name+'.pth')
-        print('Modelo {}{}.pth guardado.'.format(path, model_name))
+    print('Modelo {}{}.pth guardado.'.format(path, model_name))
 
 
 def get_tiempo():
@@ -137,6 +146,7 @@ def train(model, n_epochs:int =4,
           plot_metrics: bool = False,
           save_plots: bool = False,
           save_epochs = None,
+          model_extension = '.pt',
           failed_patients: list = []):
     """Ejecuta el entrenamiento
 
@@ -220,7 +230,10 @@ def train(model, n_epochs:int =4,
                 
                 loss_batch = np.append(loss_batch, loss.item())
                 batch_loss_history = np.append(batch_loss_history, loss.item())
-
+            del data
+            del target
+            del dataset
+            del patient
             loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
             patient_loss_history = np.append(patient_loss_history, np.mean(np.array(loss_batch)))
             tiempo_paciente = time.time()-inicio
@@ -255,7 +268,7 @@ def train(model, n_epochs:int =4,
                 'patient_loss_history': patient_loss_history,
                 'epoch_val_loss_history': epoch_val_loss_history
                 }
-    save_model(model, path2savefiles, model_name='finalmodel')
+    save_model(model, path2savefiles, model_name='finalmodel', extension=model_extension)
     if save_plots:
         plot(data_dict, show=plot_metrics, path_save=path2savefiles)
     else:
@@ -307,6 +320,7 @@ if __name__=='__main__':
     parser.add_argument('--plot_metrics', action='store_true', default = False)
     parser.add_argument('--save_plots', action='store_true', default = True)
     parser.add_argument('--save_epochs', type=int, default=None)
+    parser.add_argument('--model_extension', type=str, default='.pt')
 
     # Obtener los argumentos proporcionados por el usuario
     args = parser.parse_args()
@@ -332,7 +346,8 @@ if __name__=='__main__':
     train(model, n_epochs=args.n_epochs, batch_size=args.batch_size, val_split=args.val_split,
         path2dataset=args.path2dataset, path2savefiles=args.path2savefiles,
         plot_metrics=args.plot_metrics, save_plots=args.save_plots,
-        save_epochs=args.save_epochs, failed_patients=failed_patients)
+        save_epochs=args.save_epochs, failed_patients=failed_patients,
+        model_extension=args.model_extension)
         
         
         
