@@ -13,7 +13,6 @@ import os
 def get_confusion_matrix(id_patient, model, threshold = 0.5, batch = 10):
     cm = np.zeros((2,2))
     batch = int(batch)
-    print(cm)
     patient = Patient(id_patient)
     patient.scale()
     images, mask = patient.get_tensors(scaled = False)
@@ -22,8 +21,8 @@ def get_confusion_matrix(id_patient, model, threshold = 0.5, batch = 10):
     slices = (0, batch)
     prediccion = patient.predict(model, slices=slices, scaled=True, gpu = True)
     prediccion = np.where(prediccion >= threshold, 1, 0)[:,0,:,:]
-    
-    for i in range(batch, n_slices, batch):
+    print('Paciente: {}'.format(id_patient))
+    for i in tqdm(range(batch, n_slices, batch)):
         
         slices = (i, i+batch)
         # print(i+batch, n_slices)
@@ -38,16 +37,17 @@ def get_confusion_matrix(id_patient, model, threshold = 0.5, batch = 10):
     cm_ = confusion_matrix(label, prediccion, labels=(0,1))
     cm = cm + np.array(cm_)
     
-    print('terminado')
     return cm
 
 
 def get_confusion_matrix_list(id_patient, model, threshold = 0.5, batch = 10):
     cm = np.zeros((2,2))
     if isinstance(id_patient,str):
+        print('haciendo inferencia del paciente {}'.format(id_patient))
         cm = get_confusion_matrix(id_patient, model, threshold =threshold, batch = batch)
         return cm
     else:
+        print('haciendo inferencia del primer paciente...')
         cm = get_confusion_matrix(id_patient[0], model, threshold =threshold, batch = batch)
         for id in tqdm(id_patient[1:]):
             cm = cm + get_confusion_matrix(id, model, threshold =threshold, batch = batch)
