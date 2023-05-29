@@ -188,7 +188,7 @@ class Patient():
             slices = (0,-2)
         if torch.cuda.is_available() and gpu:
             device = torch.device('cuda')
-            images, mask = images[slices[0]:slices[-1],:,:].to(device), mask[slices[0]:slices[-1]+1,:,:].to(device)
+            images, mask = images[slices[0]:slices[-1],:,:].to(device), mask[slices[0]:slices[-1],:,:].to(device)
             pred = model(images)
         else:
             pred = model(images[slices[0]:slices[-1],:,:])
