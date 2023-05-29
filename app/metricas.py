@@ -18,14 +18,14 @@ def get_confusion_matrix(id_patient, model, threshold = 0.5, batch = 10):
     images, mask = patient.get_tensors(scaled = False)
     mask = mask.cpu().detach().numpy()
     n_slices = mask.shape[0]
-    slices = (0, batch)
+    slices = (0, int(batch))
     prediccion = patient.predict(model, slices=slices, scaled=True, gpu = True)
     prediccion = np.where(prediccion >= threshold, 1, 0)[:,0,:,:]
     
     for i in range(batch, n_slices, batch):
         
         slices = (i, i+batch)
-        print(i+batch, n_slices)
+        # print(i+batch, n_slices)
         pred = patient.predict(model, slices=slices, scaled=True, gpu = True)
         pred_bin = np.where(pred >= threshold, 1, 0)[:,0,:,:]
         prediccion = np.concatenate((prediccion, pred_bin), axis=0)
