@@ -10,7 +10,7 @@ import random
 import argparse
 import os
 
-def get_confusion_matri(id_patient, model, threshold = 0.5, batch = 10):
+def get_confusion_matrix(id_patient, model, threshold = 0.5, batch = 10):
     cm = np.zeros((2,2))
     print(cm)
     patient = Patient(id_patient)
@@ -25,6 +25,7 @@ def get_confusion_matri(id_patient, model, threshold = 0.5, batch = 10):
     for i in range(batch, n_slices, batch):
         
         slices = (i, i+batch)
+        print(i+batch, n_slices)
         pred = patient.predict(model, slices=slices, scaled=True, gpu = True)
         pred_bin = np.where(pred >= threshold, 1, 0)[:,0,:,:]
         prediccion = np.concatenate((prediccion, pred_bin), axis=0)
@@ -43,12 +44,12 @@ def get_confusion_matri(id_patient, model, threshold = 0.5, batch = 10):
 def get_confusion_matrix_list(id_patient, model, threshold = 0.5, batch = 10):
     cm = np.zeros((2,2))
     if isinstance(id_patient,str):
-        cm = get_confusion_matri(id_patient, model, threshold =threshold, batch = batch)
+        cm = get_confusion_matrix(id_patient, model, threshold =threshold, batch = batch)
         return cm
     else:
-        cm = get_confusion_matri(id_patient[0], model, threshold =threshold, batch = batch)
+        cm = get_confusion_matrix(id_patient[0], model, threshold =threshold, batch = batch)
         for id in tqdm(id_patient[1:]):
-            cm = cm + get_confusion_matri(id, model, threshold =threshold, batch = batch)
+            cm = cm + get_confusion_matrix(id, model, threshold =threshold, batch = batch)
         return cm
 
 def plotNsave(cm, save = None, show = True):
