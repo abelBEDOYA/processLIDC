@@ -182,14 +182,16 @@ class Patient():
                 plt.title(f'slice: {slices[0]}')
                 plt.show()
 
-    def predict(self, model, slices=(0,), scaled=True, gpu = True):
-        images, mask = self.get_tensors(scaled=True)
+    def predict(self, model, slices=(0,3), scaled=True, gpu = True):
+        images, mask = self.get_tensors(scaled=scaled)
+        if isinstance(slices[0], str):
+            slices = (0,-2)
         if torch.cuda.is_available() and gpu:
             device = torch.device('cuda')
-            images, mask = images[slices[0]:slices[-1]+1,:,:].to(device), mask[slices[0]:slices[-1]+1,:,:].to(device)
+            images, mask = images[slices[0]:slices[-1],:,:].to(device), mask[slices[0]:slices[-1]+1,:,:].to(device)
             pred = model(images)
         else:
-            pred = model(images[slices[0]:slices[-1]+1,:,:])
+            pred = model(images[slices[0]:slices[-1],:,:])
         if gpu:
             pred = pred.cpu().detach().numpy()
         else:
