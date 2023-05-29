@@ -102,7 +102,7 @@ if __name__ == "__main__":
         patients_list = [nombre for nombre in patients if nombre not in val_patients]
         
     print('Cargando el modelo...', flush=True)
-    model = torch.jit.load('model_scripted.pt')
+    model = torch.jit.load(args.model)
     model.to('cuda')
     model.eval()
     cm = get_confusion_matrix_list(patients_list, model, args.threshold, args.batch)
