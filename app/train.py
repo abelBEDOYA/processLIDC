@@ -35,7 +35,7 @@ def train_val_split(patients_list, val_split):
     return train_patients, val_patients
 
 
-def get_val_loss(model, val_patients, loss_fn, batch_size=4):
+def get_val_loss(model, val_patients, batch_size=4):
     if len(val_patients)==0:
         return 0
 
@@ -74,7 +74,7 @@ def get_val_loss(model, val_patients, loss_fn, batch_size=4):
             # # Forward pass
             output = model(data)
             # Calcular pérdida
-            loss = loss_fn(output[:,0], target)
+            loss = loss_function(output[:,0], target)
             loss_batch = np.append(loss_batch, loss.item())
             batch_loss_history = np.append(batch_loss_history, loss.item())
 
@@ -138,6 +138,33 @@ def get_tiempo():
     return tiempo
 
 
+def loss_function(output, target, loss = 1):
+    if loss == 1:
+        weight_zero = 1
+        weight_one = 100
+        # Definir función de pérdida
+        loss_fn = nn.BCELoss()
+        loss = loss_fn(output, target)
+        one_pixels = torch.eq(target, 1).float()
+        zero_pixels = torch.eq(target, 0).float()
+        weighted_loss = (weight_one* one_pixels * loss) + (weight_zero * zero_pixels * loss)
+        return weighted_loss
+    elif loss == 2:
+        intersection = torch.sum(output * target)
+        dice_coefficient = (2 * intersection) / (torch.sum(output) + torch.sum(target) + 1e-7)
+        loss = 1 - dice_coefficient
+        return loss
+    elif loss == 3:
+        intersection = torch.sum(output * target)
+        union = torch.sum(output) + torch.sum(target) - intersection
+        iou = intersection / (union + 1e-7)  # small constant to avoid division by zero
+        loss = 1 - iou
+        return loss
+    else:
+        print('Indica una loss function que sea 1, 2 o 3. Has indicado loss = {}'.format(loss))
+
+
+
 def train(model, n_epochs:int =4, 
           batch_size: int = 4, 
           val_split: float = 0.2,
@@ -147,7 +174,8 @@ def train(model, n_epochs:int =4,
           save_plots: bool = False,
           save_epochs = None,
           model_extension = '.pt',
-          failed_patients: list = []):
+          failed_patients: list = [],
+          loss_type: int = 1):
     """Ejecuta el entrenamiento
 
     Args:
@@ -163,8 +191,6 @@ def train(model, n_epochs:int =4,
     patients = [pat for pat in patients if not pat=='LICENSE' and pat not in failed_patients]
 
     train_patients, val_patients = train_val_split(patients, val_split)
-    # Definir función de pérdida
-    loss_fn = nn.BCELoss()
 
     # Definir optimizador
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -221,7 +247,7 @@ def train(model, n_epochs:int =4,
                 # # Forward pass
                 output = model(data)
                 # Calcular pérdida
-                loss = loss_fn(output[:,0], target)
+                loss = loss_function(output[:,0], target, loss=loss_type)
 
                 # # # Calcular gradientes y actualizar parámetros
                 optimizer.zero_grad()
@@ -243,7 +269,7 @@ def train(model, n_epochs:int =4,
         print('Fin epoca {}: {}'.format(epoch+1, get_tiempo()))
 
         # # Calculemos el loss del val:
-        val_loss = get_val_loss(model, val_patients, loss_fn, batch_size)
+        val_loss = get_val_loss(model, val_patients, batch_size)
         epoch_val_loss_history = np.append(epoch_val_loss_history, val_loss)
 
         if save_epochs is not None:
@@ -321,7 +347,7 @@ if __name__=='__main__':
     parser.add_argument('--save_plots', action='store_true', default = True)
     parser.add_argument('--save_epochs', type=int, default=None)
     parser.add_argument('--model_extension', type=str, default='.pt')
-
+    parser.add_argument('--loss_type', type=int, default=1)
     # Obtener los argumentos proporcionados por el usuario
     args = parser.parse_args()
     checks_alright(args)
@@ -347,7 +373,7 @@ if __name__=='__main__':
         path2dataset=args.path2dataset, path2savefiles=args.path2savefiles,
         plot_metrics=args.plot_metrics, save_plots=args.save_plots,
         save_epochs=args.save_epochs, failed_patients=failed_patients,
-        model_extension=args.model_extension)
+        model_extension=args.model_extension, loss_type=args.loss_type)
         
         
         
