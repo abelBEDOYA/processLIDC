@@ -35,7 +35,7 @@ def train_val_split(patients_list, val_split):
     return train_patients, val_patients
 
 
-def get_val_loss(model, val_patients, batch_size=4):
+def get_val_loss(model, val_patients, batch_size=4, loss = 1):
     if len(val_patients)==0:
         return 0
 
@@ -74,7 +74,7 @@ def get_val_loss(model, val_patients, batch_size=4):
             # # Forward pass
             output = model(data)
             # Calcular pérdida
-            loss = loss_function(output[:,0], target)
+            loss = loss_function(output[:,0], target, loss = loss)
             loss_batch = np.append(loss_batch, loss.item())
             batch_loss_history = np.append(batch_loss_history, loss.item())
 
@@ -89,7 +89,7 @@ def plot(data, show=False, path_save=None, name_plot='loss_plot'):
     patient_loss_history = data['patient_loss_history']
     epoch_val_loss_history = data['epoch_val_loss_history']
     n_epochs = len(epoch_loss_history)
-    plt.plot(np.linspace(1, n_epochs, np.array(batch_loss_history).shape[0]), np.log(np.array(batch_loss_history)), label='Train Batch Loss')
+    #plt.plot(np.linspace(1, n_epochs, np.array(batch_loss_history).shape[0]), np.log(np.array(batch_loss_history)), label='Train Batch Loss')
     plt.plot(np.linspace(1, n_epochs, np.array(patient_loss_history).shape[0]), np.log(np.array(patient_loss_history)), label='Train Patient Loss')
     plt.plot(np.linspace(1, n_epochs, n_epochs), np.log(np.array(epoch_loss_history)), label='Train Epoch Loss')
     plt.plot(np.linspace(1, n_epochs, n_epochs), np.log(np.array(epoch_val_loss_history)), label='Val. Epoch Loss')
@@ -141,25 +141,26 @@ def get_tiempo():
 def loss_function(output, target, loss = 1):
     if loss == 1:
         weight_zero = 1
-        weight_one = 100
+        weight_one = 200
         # Definir función de pérdida
         loss_fn = nn.BCELoss()
-        loss = loss_fn(output, target)
+        loss_ = loss_fn(output, target)
         one_pixels = torch.eq(target, 1).float()
         zero_pixels = torch.eq(target, 0).float()
-        weighted_loss = (weight_one* one_pixels * loss) + (weight_zero * zero_pixels * loss)
-        return weighted_loss
+        weighted_loss = (weight_one* one_pixels * loss_) + (weight_zero * zero_pixels * loss_)
+        scalar_loss = torch.mean(weighted_loss)  # Aplicar reducción para obtener un escalar
+        return scalar_loss
     elif loss == 2:
         intersection = torch.sum(output * target)
         dice_coefficient = (2 * intersection) / (torch.sum(output) + torch.sum(target) + 1e-7)
-        loss = 1 - dice_coefficient
-        return loss
+        loss_dice = 1 - dice_coefficient
+        return loss_dice
     elif loss == 3:
         intersection = torch.sum(output * target)
         union = torch.sum(output) + torch.sum(target) - intersection
         iou = intersection / (union + 1e-7)  # small constant to avoid division by zero
-        loss = 1 - iou
-        return loss
+        loss_iou = 1 - iou
+        return loss_iou
     else:
         print('Indica una loss function que sea 1, 2 o 3. Has indicado loss = {}'.format(loss))
 
@@ -269,7 +270,7 @@ def train(model, n_epochs:int =4,
         print('Fin epoca {}: {}'.format(epoch+1, get_tiempo()))
 
         # # Calculemos el loss del val:
-        val_loss = get_val_loss(model, val_patients, batch_size)
+        val_loss = get_val_loss(model, val_patients, batch_size, loss = loss_type)
         epoch_val_loss_history = np.append(epoch_val_loss_history, val_loss)
 
         if save_epochs is not None:
