@@ -35,7 +35,7 @@ def train_val_split(patients_list, val_split):
     return train_patients, val_patients
 
 
-def get_val_loss(model, val_patients, batch_size=4, loss = 1):
+def get_val_loss(model, val_patients, batch_size=4, loss_type = 1):
     if len(val_patients)==0:
         return 0
 
@@ -74,7 +74,7 @@ def get_val_loss(model, val_patients, batch_size=4, loss = 1):
             # # Forward pass
             output = model(data)
             # Calcular pérdida
-            loss = loss_function(output[:,0], target, loss = loss)
+            loss = loss_function(output[:,0], target, loss_type = loss_type)
             loss_batch = np.append(loss_batch, loss.item())
             batch_loss_history = np.append(batch_loss_history, loss.item())
 
@@ -138,8 +138,8 @@ def get_tiempo():
     return tiempo
 
 
-def loss_function(output, target, loss = 1):
-    if loss == 1:
+def loss_function(output, target, loss_type = 1):
+    if loss_type == 1:
         weight_zero = 1
         weight_one = 200
         # Definir función de pérdida
@@ -150,12 +150,12 @@ def loss_function(output, target, loss = 1):
         weighted_loss = (weight_one* one_pixels * loss_) + (weight_zero * zero_pixels * loss_)
         scalar_loss = torch.mean(weighted_loss)  # Aplicar reducción para obtener un escalar
         return scalar_loss
-    elif loss == 2:
+    elif loss_type == 2:
         intersection = torch.sum(output * target)
         dice_coefficient = (2 * intersection) / (torch.sum(output) + torch.sum(target) + 1e-7)
         loss_dice = 1 - dice_coefficient
         return loss_dice
-    elif loss == 3:
+    elif loss_type == 3:
         intersection = torch.sum(output * target)
         union = torch.sum(output) + torch.sum(target) - intersection
         iou = intersection / (union + 1e-7)  # small constant to avoid division by zero
@@ -270,7 +270,7 @@ def train(model, n_epochs:int =4,
         print('Fin epoca {}: {}'.format(epoch+1, get_tiempo()))
 
         # # Calculemos el loss del val:
-        val_loss = get_val_loss(model, val_patients, batch_size, loss = loss_type)
+        val_loss = get_val_loss(model, val_patients, batch_size, loss_type = loss_type)
         epoch_val_loss_history = np.append(epoch_val_loss_history, val_loss)
 
         if save_epochs is not None:
