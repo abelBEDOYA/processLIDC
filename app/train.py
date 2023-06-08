@@ -248,7 +248,7 @@ def train(model, n_epochs:int =4,
                 # # Forward pass
                 output = model(data)
                 # Calcular pérdida
-                loss = loss_function(output[:,0], target, loss=loss_type)
+                loss = loss_function(output[:,0], target, loss_type=loss_type)
 
                 # # # Calcular gradientes y actualizar parámetros
                 optimizer.zero_grad()
