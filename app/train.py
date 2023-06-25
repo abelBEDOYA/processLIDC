@@ -85,16 +85,21 @@ def get_val_loss(model, val_patients, batch_size=4, loss_type = 1):
     return val_mean_loss
 
 
-def plot(data, show=False, path_save=None, name_plot='loss_plot'):
+def plot(data, show=False, path_save=None, name_plot='loss_plot', loss_type=1):
     epoch_loss_history = data['epoch_loss_history']
     batch_loss_history = data['batch_loss_history']
     patient_loss_history = data['patient_loss_history']
     epoch_val_loss_history = data['epoch_val_loss_history']
     n_epochs = len(epoch_loss_history)
-    #plt.plot(np.linspace(1, n_epochs, np.array(batch_loss_history).shape[0]), np.log(np.array(batch_loss_history)), label='Train Batch Loss')
-    plt.plot(np.linspace(1, n_epochs, np.array(patient_loss_history).shape[0]), np.log(np.array(patient_loss_history)), label='Train Patient Loss')
-    plt.plot(np.linspace(1, n_epochs, n_epochs), np.log(np.array(epoch_loss_history)), label='Train Epoch Loss')
-    plt.plot(np.linspace(1, n_epochs, n_epochs), np.log(np.array(epoch_val_loss_history)), label='Val. Epoch Loss')
+    if loss_type==3:
+        plt.plot(np.linspace(1, n_epochs, np.array(patient_loss_history).shape[0]), np.array(patient_loss_history), label='Train Patient Loss')
+        plt.plot(np.linspace(1, n_epochs, n_epochs), np.array(epoch_loss_history), label='Train Epoch Loss')
+        plt.plot(np.linspace(1, n_epochs, n_epochs), np.array(epoch_val_loss_history), label='Val. Epoch Loss')
+    else:
+        #plt.plot(np.linspace(1, n_epochs, np.array(batch_loss_history).shape[0]), np.log(np.array(batch_loss_history)), label='Train Batch Loss')
+        plt.plot(np.linspace(1, n_epochs, np.array(patient_loss_history).shape[0]), np.log(np.array(patient_loss_history)), label='Train Patient Loss')
+        plt.plot(np.linspace(1, n_epochs, n_epochs), np.log(np.array(epoch_loss_history)), label='Train Epoch Loss')
+        plt.plot(np.linspace(1, n_epochs, n_epochs), np.log(np.array(epoch_val_loss_history)), label='Val. Epoch Loss')
     plt.title('Loss: Binary Cross Entropy')
     plt.xlabel('Epoch')
     plt.ylabel('log(loss)')
@@ -296,7 +301,7 @@ def train(model, n_epochs:int =4,
                         'patient_loss_history': patient_loss_history,
                         'epoch_val_loss_history': epoch_val_loss_history
                         }
-                    plot(data_dict, show=plot_metrics, path_save=path2savefiles, name_plot= 'loss_epoch_{}'.format(epoch+1))
+                    plot(data_dict, show=plot_metrics, path_save=path2savefiles, name_plot= 'loss_epoch_{}'.format(epoch+1), loss_type=loss_type)
 
         print('Train Epoch: {}\t Train Loss: {:.6f}. Val Loss: {:.6f}'.format(
             epoch+1, epoch_loss_history[-1], epoch_val_loss_history[-1]))
