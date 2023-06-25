@@ -12,7 +12,7 @@ from collections import deque
 # Mi libreria:
 from processLIDC import Patient
 import datetime
-
+import cv2
 random.seed(123)
 
 def train_val_split(patients_list, val_split):
@@ -70,7 +70,9 @@ def get_val_loss(model, val_patients, batch_size=4, loss_type = 1):
         train_loader = DataLoader(dataset,batch_size=batch_size, shuffle=True)
         loss_batch = np.array([])
         for batch_idx, (data, target) in enumerate(train_loader):
-
+            if torch.mean(target)==0:
+                # print('es 0')
+                continue
             # # Forward pass
             output = model(data)
             # Calcular pérdida
@@ -156,11 +158,19 @@ def loss_function(output, target, loss_type = 1):
         loss_dice = 1 - dice_coefficient
         return loss_dice
     elif loss_type == 3:
+        
         intersection = torch.sum(output * target)
         union = torch.sum(output) + torch.sum(target) - intersection
         iou = intersection / (union + 1e-7)  # small constant to avoid division by zero
         loss_iou = 1 - iou
+        # print(loss_iou)
         return loss_iou
+    elif loss_type == 4:
+        img = output.cpu().detach().numpy()[0]
+        # cv2.imshow('output', img*255)
+        # cv2.waitKey(0)
+        loss_abs = torch.abs(output - target)
+        return torch.mean(loss_abs)
     else:
         print('Indica una loss function que sea 1, 2 o 3. Has indicado loss = {}'.format(loss))
 
@@ -244,7 +254,10 @@ def train(model, n_epochs:int =4,
             train_loader = DataLoader(dataset,batch_size=batch_size, shuffle=True)
             loss_batch = np.array([])
             for batch_idx, (data, target) in enumerate(train_loader):
-
+                if torch.mean(target)==0:
+                    # print('es 0')
+                    continue
+                # print(torch.mean(target))
                 # # Forward pass
                 output = model(data)
                 # Calcular pérdida
