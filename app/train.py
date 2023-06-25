@@ -106,7 +106,7 @@ def plot(data, show=False, path_save=None, name_plot='loss_plot', loss_type=1):
     plt.legend(loc = 'best', frameon=True)
     if path_save is not None:
         plt.savefig(path_save+'{}.png'.format(name_plot), dpi=300)
-        print('Loss plots guardados')
+        print(f'Loss plots guardados en {path_save}')
     if show:
         plt.show()
     plt.close('all')
@@ -177,7 +177,7 @@ def loss_function(output, target, loss_type = 1):
         loss_abs = torch.abs(output - target)
         return torch.mean(loss_abs)
     else:
-        print('Indica una loss function que sea 1, 2 o 3. Has indicado loss = {}'.format(loss))
+        print('Indica una loss function que sea 1, 2 o 3. Has indicado loss = {}'.format(loss_type))
 
 
 
@@ -315,9 +315,9 @@ def train(model, n_epochs:int =4,
                 }
     save_model(model, path2savefiles, model_name='finalmodel', extension=model_extension)
     if save_plots:
-        plot(data_dict, show=plot_metrics, path_save=path2savefiles)
+        plot(data_dict, show=plot_metrics, path_save=path2savefiles, loss_type=loss_type)
     else:
-        plot(data_dict, show=plot_metrics)
+        plot(data_dict, show=plot_metrics, loss_type=loss_type)
     
 
 def checks_alright(args):
