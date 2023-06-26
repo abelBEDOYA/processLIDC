@@ -72,18 +72,21 @@ def get_val_loss(model, val_patients, batch_size=4, loss_type = 1):
         loss_batch = np.array([])
         for batch_idx, (data, target) in enumerate(train_loader):
             if torch.mean(target)==0:
-                print('es 0')
+                # print('es 0')
                 continue
             # # Forward pass
             output = model(data)
             # Calcular pérdida
             loss = loss_function(output[:,0], target, loss_type = loss_type)
-            print('loss', loss, 'torch.mean(target):', torch.mean(target))
+            # print('loss', loss, 'torch.mean(target):', torch.mean(target))
             
             loss_batch = np.append(loss_batch, loss.item())
             batch_loss_history = np.append(batch_loss_history, loss.item())
+        if len(loss_batch)==0:
+                print('paciente sin tumor?? lo saltoo')
+                continue
         loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
-        print('id_patient', id_pat, 'loss_patient', loss_patient)
+        # print('id_patient', id_pat, 'loss_patient', loss_patient)
     val_mean_loss = np.mean(loss_patient)
     return val_mean_loss
 
@@ -262,42 +265,30 @@ def train(model, n_epochs:int =4,
             train_loader = DataLoader(dataset,batch_size=batch_size, shuffle=True)
             loss_batch = np.array([])
             for batch_idx, (data, target) in enumerate(train_loader):
-                print(1)
                 if torch.mean(target)==0:
-                    print('\t es 0')
+                    # print('\t es 0')
                     continue
-                print(2)
                 # print(torch.mean(target))
                 # # Forward pass
                 output = model(data)
                 # Calcular pérdida
                 loss = loss_function(output[:,0], target, loss_type=loss_type)
-                print('\t loss', loss, 'torch.mean(target):', torch.mean(target))
-                print(3)
+                # print('\t loss', loss, 'torch.mean(target):', torch.mean(target))
                 # # # Calcular gradientes y actualizar parámetros
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                print(4)
                 loss_batch = np.append(loss_batch, loss.item())
-                print(5)
                 batch_loss_history = np.append(batch_loss_history, loss.item())
-                print(6)
             del data
             del target
             del dataset
             del patient
-            print(7)
             if len(loss_batch)==0:
-                print('va a dar fallo por el loss_batch')
+                print('paciente sin tumor?? lo saltoo')
                 continue
-            print(8)
             loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
-            print(9)
-            print('id_patient', id_pat, 'loss_patient', loss_patient)
-            if len(loss_batch)==0:
-                print('va a dar fallo por el loss_batch')
-            print(10)
+            # print('id_patient', id_pat, 'loss_patient', loss_patient)
             patient_loss_history = np.append(patient_loss_history, loss_patient)
             tiempo_paciente = time.time()-inicio
             tiempos_paciente.append(tiempo_paciente)
