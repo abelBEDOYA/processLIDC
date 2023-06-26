@@ -290,6 +290,7 @@ def train(model, n_epochs:int =4,
             print(7)
             if len(loss_batch)==0:
                 print('va a dar fallo por el loss_batch')
+                continue
             print(8)
             loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
             print(9)
