@@ -83,7 +83,7 @@ def get_val_loss(model, val_patients, batch_size=4, loss_type = 1):
             loss_batch = np.append(loss_batch, loss.item())
             batch_loss_history = np.append(batch_loss_history, loss.item())
         if len(loss_batch)==0:
-                print('paciente sin tumor?? lo saltoo')
+                print('Paciente sin tumor (es posible, pacient=988 por ejemplo). Paciente saltado')
                 continue
         loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
         # print('id_patient', id_pat, 'loss_patient', loss_patient)
@@ -285,7 +285,7 @@ def train(model, n_epochs:int =4,
             del dataset
             del patient
             if len(loss_batch)==0:
-                print('paciente sin tumor?? lo saltoo')
+                print('Paciente sin tumor (es posible, pacient=988 por ejemplo). Paciente saltado')
                 continue
             loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
             # print('id_patient', id_pat, 'loss_patient', loss_patient)
