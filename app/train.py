@@ -15,6 +15,7 @@ import datetime
 import cv2
 random.seed(123)
 
+
 def train_val_split(patients_list, val_split):
     """TOma la lsita de pacientes list(str) y hace la separacion
     en train y validation segun la proporcion indicada en val_split.
@@ -71,16 +72,18 @@ def get_val_loss(model, val_patients, batch_size=4, loss_type = 1):
         loss_batch = np.array([])
         for batch_idx, (data, target) in enumerate(train_loader):
             if torch.mean(target)==0:
-                # print('es 0')
+                print('es 0')
                 continue
             # # Forward pass
             output = model(data)
             # Calcular pérdida
             loss = loss_function(output[:,0], target, loss_type = loss_type)
+            print('loss', loss, 'torch.mean(target):', torch.mean(target))
+            
             loss_batch = np.append(loss_batch, loss.item())
             batch_loss_history = np.append(batch_loss_history, loss.item())
-
         loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
+        print('id_patient', id_pat, 'loss_patient', loss_patient)
     val_mean_loss = np.mean(loss_patient)
     return val_mean_loss
 
@@ -260,14 +263,14 @@ def train(model, n_epochs:int =4,
             loss_batch = np.array([])
             for batch_idx, (data, target) in enumerate(train_loader):
                 if torch.mean(target)==0:
-                    # print('es 0')
+                    print('\t es 0')
                     continue
                 # print(torch.mean(target))
                 # # Forward pass
                 output = model(data)
                 # Calcular pérdida
                 loss = loss_function(output[:,0], target, loss_type=loss_type)
-
+                print('\t loss', loss, 'torch.mean(target):', torch.mean(target))
                 # # # Calcular gradientes y actualizar parámetros
                 optimizer.zero_grad()
                 loss.backward()
@@ -280,6 +283,7 @@ def train(model, n_epochs:int =4,
             del dataset
             del patient
             loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
+            print('id_patient', id_pat, 'loss_patient', loss_patient)
             patient_loss_history = np.append(patient_loss_history, np.mean(np.array(loss_batch)))
             tiempo_paciente = time.time()-inicio
             tiempos_paciente.append(tiempo_paciente)
