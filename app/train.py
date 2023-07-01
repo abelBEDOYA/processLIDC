@@ -131,8 +131,9 @@ def save_model(model, path='./', model_name='model', extension = '.pt'):
         
     # Guardar el modelo
     if extension == '.pt':
-        model_scripted = torch.jit.script(model) # Export to TorchScript
-        model_scripted.save(path+model_name+'.pt') # Save
+        torch.save(model, './modelllll.pt')
+        # model_scripted = torch.jit.script(model) # Export to TorchScript
+        # model_scripted.save(path+model_name+'.pt') # Save
     else:
         torch.save(model.state_dict(), path+model_name+'.pth')
     print('Modelo {}{}.pth guardado.'.format(path, model_name))
@@ -158,16 +159,16 @@ def loss_function(output, target, loss_type = 1):
         # Definir función de pérdida
         loss_fn = nn.BCELoss()
         loss_ = loss_fn(output, target)
-        one_pixels = torch.eq(target, 1).float()
-        zero_pixels = torch.eq(target, 0).float()
-        weighted_loss = (weight_one* one_pixels * loss_) + (weight_zero * zero_pixels * loss_)
-        scalar_loss = torch.mean(weighted_loss)  # Aplicar reducción para obtener un escalar
-        return scalar_loss
+        return loss_
     elif loss_type == 2:
         intersection = torch.sum(output * target)
-        dice_coefficient = (2 * intersection) / (torch.sum(output) + torch.sum(target) + 1e-7)
-        loss_dice = 1 - dice_coefficient
-        return loss_dice
+        union = torch.sum(output) + torch.sum(target) - intersection
+        iou = intersection / (union + 1e-7)  # small constant to avoid division by zero
+        loss_iou = 1 - iou
+        loss_fn = nn.BCELoss()
+        loss_bce = loss_fn(output, target)
+        loss_total = loss_iou + loss_bce/np.exp(-7.5)
+        return loss_total
     elif loss_type == 3:
         
         intersection = torch.sum(output * target)
