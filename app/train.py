@@ -139,7 +139,7 @@ def save_model(model, path='./', model_name='model', extension = '.pt'):
     print('Modelo {}{}.pth guardado.'.format(path, model_name))
 
 
-def get_tiempo():
+def get_tiempo(con_fecha=False):
     fecha_hora_actual = datetime.datetime.now()
     # Obtener partes individuales de la fecha y hora
     anio = fecha_hora_actual.year
@@ -148,14 +148,15 @@ def get_tiempo():
     hora = fecha_hora_actual.hour
     minuto = fecha_hora_actual.minute
     segundo = fecha_hora_actual.second
-    tiempo = '{}-{}-{}. {}:{}:{}'.format(anio, mes, dia, hora, minuto, round(segundo))
+    if con_fecha:
+        tiempo = '{}-{}-{}. {}:{}:{}'.format(anio, mes, dia, hora, minuto, round(segundo))
+    else:
+        tiempo = '{}:{}:{}'.format(hora, minuto, round(segundo))
     return tiempo
 
 
 def loss_function(output, target, loss_type = 1):
     if loss_type == 1:
-        weight_zero = 1
-        weight_one = 200
         # Definir función de pérdida
         loss_fn = nn.BCELoss()
         loss_ = loss_fn(output, target)
@@ -229,9 +230,9 @@ def train(model, n_epochs:int =4,
     epoch_loss_history = np.array([])
     epoch_val_loss_history = np.array([])
     tiempos_paciente = deque([6,6,6,6,6], maxlen=5)
-    print('Inicio de entrenamiento: {}'.format(get_tiempo()))
+    print('Inicio de entrenamiento: {}'.format(get_tiempo(con_fecha=True)))
     for epoch in range(n_epochs):
-        print(f'Epoch: {epoch+1}/{n_epochs}')
+        print(f'Epoch: {epoch+1}/{n_epochs}. {get_tiempo(con_fecha=True)}')
         loss_patient = np.array([])
         random.shuffle(train_patients)
         len_train_patients = len(train_patients)
@@ -240,7 +241,7 @@ def train(model, n_epochs:int =4,
             inicio = time.time()
             time.sleep(1)
             
-            tqdm_train_patients.set_description('{}. Rate {} s/p. {}/{}. {}. Progreso de la epoca:'.format(get_tiempo(), 
+            tqdm_train_patients.set_description('Epoch: {}/{}. {}. Rate {} s/p. {}/{}. {}. Progreso de la epoca:'.format(epoch+1, n_epochs, get_tiempo(), 
                                                                                                            round(sum(tiempos_paciente)/5, 2),
                                                                                                            i,
                                                                                                            len_train_patients,
