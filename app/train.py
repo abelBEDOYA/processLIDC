@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch
+import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
 import matplotlib.pyplot as plt
 import numpy as np
@@ -97,7 +98,7 @@ def plot(data, show=False, path_save=None, name_plot='loss_plot', loss_type=1):
     patient_loss_history = data['patient_loss_history']
     epoch_val_loss_history = data['epoch_val_loss_history']
     n_epochs = len(epoch_loss_history)
-    if loss_type==3 or loss_type==2:
+    if loss_type==3 or loss_type==4 or loss_type==2:
         plt.plot(np.linspace(1, n_epochs, np.array(patient_loss_history).shape[0]), np.array(patient_loss_history), label='Train Patient Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.array(epoch_loss_history), label='Train Epoch Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.array(epoch_val_loss_history), label='Val. Epoch Loss')
@@ -107,6 +108,7 @@ def plot(data, show=False, path_save=None, name_plot='loss_plot', loss_type=1):
         plt.plot(np.linspace(1, n_epochs, np.array(patient_loss_history).shape[0]), np.log(np.array(patient_loss_history)), label='Train Patient Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.log(np.array(epoch_loss_history)), label='Train Epoch Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.log(np.array(epoch_val_loss_history)), label='Val. Epoch Loss')
+        plt.yscale("log")
         plt.ylabel('log(loss)')
     plt.title(f'Loss: Type {loss_type}')
     plt.xlabel('Epoch')
@@ -159,7 +161,7 @@ def get_tiempo(con_fecha=False):
 def loss_function(output, target, loss_type = 1):
     if loss_type == 1:
         # Definir función de pérdida
-        loss_fn = nn.BCELoss()
+        loss_fn = nn.BCELoss(reduction='none')
         loss_ = loss_fn(output, target)
         return loss_
     elif loss_type == 2:
@@ -180,11 +182,10 @@ def loss_function(output, target, loss_type = 1):
         # print(loss_iou)
         return loss_iou
     elif loss_type == 4:
-        img = output.cpu().detach().numpy()[0]
-        # cv2.imshow('output', img*255)
-        # cv2.waitKey(0)
-        loss_abs = torch.abs(output - target)
-        return torch.mean(loss_abs)
+        weights = target*20+1
+        loss = F.binary_cross_entropy(output, target, reduction='none')
+        weighted_loss = loss * weights
+        return torch.sum(weighted_loss)
     else:
         print('Indica una loss function que sea 1, 2 o 3. Has indicado loss = {}'.format(loss_type))
 
