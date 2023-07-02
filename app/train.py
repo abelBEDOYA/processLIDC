@@ -97,18 +97,19 @@ def plot(data, show=False, path_save=None, name_plot='loss_plot', loss_type=1):
     patient_loss_history = data['patient_loss_history']
     epoch_val_loss_history = data['epoch_val_loss_history']
     n_epochs = len(epoch_loss_history)
-    if loss_type==3:
+    if loss_type==3 or loss_type==2:
         plt.plot(np.linspace(1, n_epochs, np.array(patient_loss_history).shape[0]), np.array(patient_loss_history), label='Train Patient Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.array(epoch_loss_history), label='Train Epoch Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.array(epoch_val_loss_history), label='Val. Epoch Loss')
+        plt.ylabel('loss')
     else:
         #plt.plot(np.linspace(1, n_epochs, np.array(batch_loss_history).shape[0]), np.log(np.array(batch_loss_history)), label='Train Batch Loss')
         plt.plot(np.linspace(1, n_epochs, np.array(patient_loss_history).shape[0]), np.log(np.array(patient_loss_history)), label='Train Patient Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.log(np.array(epoch_loss_history)), label='Train Epoch Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.log(np.array(epoch_val_loss_history)), label='Val. Epoch Loss')
-    plt.title('Loss: Binary Cross Entropy')
+        plt.ylabel('log(loss)')
+    plt.title(f'Loss: Type {loss_type}')
     plt.xlabel('Epoch')
-    plt.ylabel('log(loss)')
     plt.legend(loc = 'best', frameon=True)
     if path_save is not None:
         plt.savefig(path_save+'{}.png'.format(name_plot), dpi=300)
@@ -168,7 +169,7 @@ def loss_function(output, target, loss_type = 1):
         loss_iou = 1 - iou
         loss_fn = nn.BCELoss()
         loss_bce = loss_fn(output, target)
-        loss_total = loss_iou + loss_bce/np.exp(-7.5)
+        loss_total = loss_iou + loss_bce/np.exp(-7)
         return loss_total
     elif loss_type == 3:
         
@@ -267,7 +268,7 @@ def train(model, n_epochs:int =4,
             train_loader = DataLoader(dataset,batch_size=batch_size, shuffle=True)
             loss_batch = np.array([])
             for batch_idx, (data, target) in enumerate(train_loader):
-                if torch.mean(target)==0:
+                if torch.all(target == 0):
                     # print('\t es 0')
                     continue
                 # print(torch.mean(target))
