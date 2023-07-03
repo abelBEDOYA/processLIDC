@@ -98,7 +98,7 @@ def plot(data, show=False, path_save=None, name_plot='loss_plot', loss_type=1):
     patient_loss_history = data['patient_loss_history']
     epoch_val_loss_history = data['epoch_val_loss_history']
     n_epochs = len(epoch_loss_history)
-    if loss_type==3 or loss_type==4 or loss_type==2:
+    if loss_type==3:
         plt.plot(np.linspace(1, n_epochs, np.array(patient_loss_history).shape[0]), np.array(patient_loss_history), label='Train Patient Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.array(epoch_loss_history), label='Train Epoch Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.array(epoch_val_loss_history), label='Val. Epoch Loss')
