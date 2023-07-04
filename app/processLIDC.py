@@ -185,20 +185,20 @@ class Patient():
     def predict(self, model, slices=(0,3), scaled=True, gpu = True):
         images, mask = self.get_tensors(scaled=scaled)
         if isinstance(slices[0], str):
-            slices = (0,-2)
+            slices = (0,-1)
         if torch.cuda.is_available() and gpu:
             device = torch.device('cuda')
-            images, mask = images[slices[0]:slices[-1],:,:].to(device), mask[slices[0]:slices[-1],:,:].to(device)
+            images, mask = images[slices[0]:slices[-1]+1,:,:].to(device), mask[slices[0]:slices[-1],:,:].to(device)
             pred = model(images)
         else:
-            pred = model(images[slices[0]:slices[-1],:,:])
+            pred = model(images[slices[0]:slices[-1]+1,:,:])
         if gpu:
             pred = pred.cpu().detach().numpy()
         else:
             pred = pred.detach().numpy()
         return pred
 
-    def imshow(self, slices=(0,), label=True, scaled=True, model = None, thresholds = (0.5, ), path2save=None, gpu = True):
+    def imshow(self, slices=(0,), label=True, scaled=True, model = None, threshold = 0.5, path2save=None, gpu = True):
         """gpu = True es par aindicar que el modelo ha sido entrenado con la grafica y por tanto,
         el tnsor de datos qu debe comerse es de cuda tensor"""
         print('obteniendo los datos...')
@@ -213,57 +213,27 @@ class Patient():
             images = [images[i] for i in slices]
 
         num_images = len(slices)
-        rows = int(math.sqrt(num_images))+1
-        cols = math.ceil(num_images / rows)
         
-        fig, axes = plt.subplots(rows, cols, figsize=(10, 10))
-        axes = axes.flatten()
         # print(self.mask.shape)
         if model is not None:
             print('realizando inferencia...')
             legend_labels_pred = ['Predicción']
             pred = self.predict(model, slices=slices, scaled=True, gpu=gpu)
-            
         legend_labels_label = ['Etiqueta']
-        for i, image in enumerate(images):
-            axes[i].imshow(image[0,:,:])
-            axes[i].axis('off')
-            axes[i].set_title('Slice {}'.format(slices[i]))
-            if model is not None:
-                contours = axes[i].contour(pred[i,0], levels=thresholds, colors='r')
-                axes[i].clabel(contours, inline=True, fontsize=8)
-                # axes[i].legend(legend_labels_pred, loc='upper right')
+        fig, axs = plt.subplots(1, num_images, figsize=(12, 4))
+
+        for i in range(num_images):
+            imagen = images[i][0,:,:]  # Función para obtener la imagen según el índice
+            
+            axs[i].imshow(imagen, cmap='gray')
+            axs[i].set_title(f'Imagen {slices[i]}')
+            
+            # Dibujar contorno
+            axs[i].contour(mask[i], colors='blue', levels=[0.5])  # Ajusta el nivel de contorno según tus necesidades
+            if model is not None and np.any(pred[i,0]>threshold):
+                axs[i].contour(pred[i,0], colors='red', levels=[threshold])  # Ajusta el nivel de contorno según tus necesidades
         
-            if label:
-                contours = axes[i].contour(mask[i], levels=[0.5], colors='blue')
-                axes[i].clabel(contours, inline=True, fontsize=8)
-                # axes[i].legend(legend_labels_label, loc='upper right')
-        # if model is not None:
-        #     fig.legend([contours.collections[0]], legend_labels_pred, loc='lower right')  # , facecolor=color_pred)
-        # if label:
-        #     fig.legend([contours.collections[0]], legend_labels_label, loc='lower right')  # , facecolor=color_label)
-        # fig.legend([contours.collections], legend_labels_label, loc='lower right')
-        fig.legend()
-        # if label and model is not None:
-        #     legend_labels = legend_labels_pred + legend_labels_label
-        #     fig.legend(legend_labels, loc='upper right')
-        # elif label:
-        #     legend_labels = legend_labels_label
-        #     fig.legend(legend_labels, loc='upper right')
-        
-        # Elimina los ejes no utilizados si hay menos imágenes que subplots
-        if num_images < len(axes):
-            for j in range(num_images, len(axes)):
-                fig.delaxes(axes[j])
-        fig.suptitle('{}'.format(self.id_patient))
-        plt.tight_layout()
         plt.show()
-        if path2save is not None:
-            fig.set_facecolor('white')
-            path = '{}/pred_grid_{}.png'.format(path2save, self.id_patient)
-            fig.savefig('{}'.format(path), dpi=300, bbox_inches='tight')
-            print('figura {} guardada'.format(path))
-        
 
     def get_tensors(self, scaled = False):
         if scaled is False:

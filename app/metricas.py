@@ -57,7 +57,7 @@ def plotNsave(cm, save = None, show = True):
     fig, ax = plt.subplots()
 
     # Crear mapa de calor utilizando seaborn
-    sns.heatmap(np.int32(cm/100), annot=True, fmt="d", cmap="Blues", cbar=False, square=True)  # , xticklabels=labels, yticklabels=labels)
+    sns.heatmap(np.int32(cm), annot=True, fmt="d", cmap="Blues", cbar=False, square=True)  # , xticklabels=labels, yticklabels=labels)
 
     # Añadir etiquetas a los ejes
     ax.set_xlabel("Etiqueta Predicha")
