@@ -134,7 +134,7 @@ def save_model(model, path='./', model_name='model', extension = '.pt'):
         
     # Guardar el modelo
     if extension == '.pt':
-        # torch.save(model, './modelllll.pt')
+        torch.save(model, path+model_name+'_nojit.pt')
         model_scripted = torch.jit.script(model) # Export to TorchScript
         model_scripted.save(path+model_name+'.pt') # Save
     else:
