@@ -170,7 +170,7 @@ def plot_confusion_matrix(confusion_dict, save= './',show=False):
         plt.show()
     if save is not None:
         plt.savefig(save+'confusion_matrix.png', dpi=300)
-        print(f'figura guardada {save}confusion_matrix.png')
+        print(f'figura guardada {save}confusion_matrix_iou.png')
 
 
 
