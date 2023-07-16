@@ -18,22 +18,25 @@ def get_confusion_matrix(id_patient, model, threshold = 0.5, batch = 10):
     images, mask = patient.get_tensors(scaled = False)
     mask = mask.cpu().detach().numpy()
     n_slices = mask.shape[0]
-    slices = (0, batch)
+    slices = (0, batch-1)
     prediccion = patient.predict(model, slices=slices, scaled=True, gpu = True)
     prediccion = np.where(prediccion >= threshold, 1, 0)[:,0,:,:]
-    print('Paciente: {}'.format(id_patient))
     for i in tqdm(range(batch, n_slices, batch)):
         
-        slices = (i, i+batch)
+        slices = (i, i+batch-1)
         # print(i+batch, n_slices)
         pred = patient.predict(model, slices=slices, scaled=True, gpu = True)
         pred_bin = np.where(pred >= threshold, 1, 0)[:,0,:,:]
         prediccion = np.concatenate((prediccion, pred_bin), axis=0)
+        print(f'{i}', prediccion.shape)
         
 
+    # label = mask[slices[0]: slices[-1]+1].flatten()
     label = mask.flatten()
+
     
     prediccion = prediccion.flatten()
+    print(label.shape, prediccion.shape)
     cm_ = confusion_matrix(label, prediccion, labels=(0,1))
     cm = cm + np.array(cm_)
     
@@ -70,6 +73,7 @@ def plotNsave(cm, save = None, show = True):
         plt.show()
     if save is not None:
         plt.savefig(save+'confusion_matrix.png', dpi=300)
+        print(f'figura guardada {save}confusion_matrix.png')
 
 
 if __name__ == "__main__":
