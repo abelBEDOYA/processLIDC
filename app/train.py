@@ -99,13 +99,13 @@ def plot(data, show=False, path_save=None, name_plot='loss_plot', loss_type=1):
     epoch_val_loss_history = data['epoch_val_loss_history']
     n_epochs = len(epoch_loss_history)
     if loss_type==3:
-        plt.plot(np.linspace(1, n_epochs, np.array(patient_loss_history).shape[0]), np.array(patient_loss_history), label='Train Patient Loss')
+        plt.plot(np.linspace(1, n_epochs, np.array(patient_loss_history).shape[0]), np.array(patient_loss_history), '.', alpha=0.2, label='Train Patient Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.array(epoch_loss_history), label='Train Epoch Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.array(epoch_val_loss_history), label='Val. Epoch Loss')
         plt.ylabel('loss')
     else:
         #plt.plot(np.linspace(1, n_epochs, np.array(batch_loss_history).shape[0]), np.log(np.array(batch_loss_history)), label='Train Batch Loss')
-        plt.plot(np.linspace(1, n_epochs, np.array(patient_loss_history).shape[0]), np.log(np.array(patient_loss_history)), label='Train Patient Loss')
+        plt.plot(np.linspace(1, n_epochs, np.array(patient_loss_history).shape[0]), np.log(np.array(patient_loss_history)), '.', alpha=0.2,label='Train Patient Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.log(np.array(epoch_loss_history)), label='Train Epoch Loss')
         plt.plot(np.linspace(1, n_epochs, n_epochs), np.log(np.array(epoch_val_loss_history)), label='Val. Epoch Loss')
         plt.yscale("log")
@@ -169,9 +169,10 @@ def loss_function(output, target, loss_type = 1):
         union = torch.sum(output) + torch.sum(target) - intersection
         iou = intersection / (union + 1e-7)  # small constant to avoid division by zero
         loss_iou = 1 - iou
-        loss_fn = nn.BCELoss()
-        loss_bce = loss_fn(output, target)
-        loss_total = loss_iou + loss_bce/np.exp(-7)
+        weights = target*20+1
+        loss = F.binary_cross_entropy(output, target, reduction='none')
+        weighted_loss = loss * weights
+        loss_total = loss_iou + torch.sum(weighted_loss)/6
         return loss_total
     elif loss_type == 3:
         
