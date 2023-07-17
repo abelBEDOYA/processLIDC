@@ -10,7 +10,7 @@ import random
 import argparse
 import os
 import cv2
-
+from datetime import datetime
 
 def calculate_iou(contour_a, contour_b):
 
@@ -110,7 +110,7 @@ def calculate_confusion_matrix(mask_a, mask_b, iou_threshold=0.3):
         'FP': false_positive,
         'FN': false_negative
     }
-    print(confusion_matrix)
+    # print(confusion_matrix)
     return confusion_matrix
 
 
@@ -130,7 +130,7 @@ def get_confusion_matrix2(patient_list, threshold=0.4):
         'FP': 0,
         'FN': 0
     }
-    for patient_id in patient_list:
+    for patient_id in tqdm(patient_list):
         print('patient_id', patient_id)
         patient = Patient(patient_id)
         patient.scale()
@@ -139,21 +139,21 @@ def get_confusion_matrix2(patient_list, threshold=0.4):
         mask = mask.cpu().detach().numpy()
         mask = mask.astype('int8')*255
 
-        for i in tqdm(range(n_slices)):
+        for i in range(n_slices):
             
             if np.all(mask[i] == 0):
                 continue
-            print(i)
+            print(f'{patient_id}  slices {i}/{n_slices} Hay tumor.')
             prediccion = patient.predict(model, slices=(i,), scaled=True, gpu = True)
             prediccion = np.where(prediccion >= threshold, 1, 0)[0,0,:,:]
             prediccion = prediccion.astype('int8')*255
             confusion_matrix_ = calculate_confusion_matrix(prediccion, mask[i], iou_threshold=0.3)
             confusion_matrix_total = sumar_diccionarios(confusion_matrix_total, confusion_matrix_)
-            print('confusion_matriz_total', confusion_matrix_total)
+            # print('confusion_matriz_total', confusion_matrix_total)
     return confusion_matrix_total
 
 
-def plot_confusion_matrix(confusion_dict, save= './',show=False):
+def plot_confusion_matrix(confusion_dict, save= './',show=False, threshold=999):
     labels = list(confusion_dict.keys())
     confusion_matrix = [[confusion_dict['TP'], confusion_dict['FP']],
                         [confusion_dict['FN'], confusion_dict['TN']]]
@@ -161,16 +161,20 @@ def plot_confusion_matrix(confusion_dict, save= './',show=False):
     # plt.figure(figsize=(6, 4))
     fig, ax = plt.subplots()
 
-    sns.heatmap(confusion_matrix, annot=True, fmt="d", cmap="Blues", xticklabels=('label: nodulo', 'label: no_nodulo'), yticklabels=('pred: nodulo', 'pred: no_nodulo'))
+    sns.heatmap(confusion_matrix, annot=True, fmt="d", cmap="Reds", xticklabels=('label: nodulo', 'label: no_nodulo'), yticklabels=('pred: nodulo', 'pred: no_nodulo'))
     ax.set_xlabel("Label")
     ax.set_ylabel("Prediccion")
-    ax.set_title("Confusion Matrix")
+    ax.set_title(f"Confusion Matrix: IoU. threshold= {threshold}, iou_threshold = 0.1")
     if show:
         # Mostrar la figura
         plt.show()
     if save is not None:
-        plt.savefig(save+'confusion_matrix.png', dpi=300)
-        print(f'figura guardada {save}confusion_matrix_iou.png')
+        fecha_actual = datetime.now()
+        # Formatear la fecha en el formato deseado (por ejemplo, "año_mes_dia_hora_minuto_segundo")
+        fecha = fecha_actual.strftime("%Y-%m-%d_%H-%M-%S")
+        path = save+f'confusion_matrix_iou_{fecha}.png'
+        plt.savefig(path, dpi=300)
+        print(f'figura guardada {path}')
 
 
 
@@ -212,7 +216,7 @@ if __name__ == "__main__":
     matriz = get_confusion_matrix2(patients_list, threshold=args.threshold)
     print(matriz)
     # cm = get_confusion_matrix_list(patients_list, model, args.threshold, args.batch)
-    plot_confusion_matrix(matriz, save=args.save, show=False)
+    plot_confusion_matrix(matriz, save=args.save, show=False, threshold = args.threshold)
     
     
     

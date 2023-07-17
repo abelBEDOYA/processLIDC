@@ -9,6 +9,8 @@ from tqdm import tqdm
 import random
 import argparse
 import os
+from datetime import datetime
+
 
 def get_confusion_matrix(id_patient, model, threshold = 0.5, batch = 10):
     cm = np.zeros((2,2))
@@ -60,20 +62,24 @@ def plotNsave(cm, save = None, show = True):
     fig, ax = plt.subplots()
 
     # Crear mapa de calor utilizando seaborn
-    sns.heatmap(np.int32(cm), annot=True, fmt="d", cmap="Blues", cbar=False, square=True)  # , xticklabels=labels, yticklabels=labels)
+    sns.heatmap(np.int32(cm), annot=True, fmt="d", cmap="Reds", cbar=False, square=True)  # , xticklabels=labels, yticklabels=labels)
 
     # Añadir etiquetas a los ejes
     ax.set_xlabel("Etiqueta Predicha")
     ax.set_ylabel("Etiqueta Verdadera")
 
     # Añadir título
-    ax.set_title("Matriz de Confusión")
+    ax.set_title("Confusion Matrix, area")
     if show:
         # Mostrar la figura
         plt.show()
     if save is not None:
-        plt.savefig(save+'confusion_matrix.png', dpi=300)
-        print(f'figura guardada {save}confusion_matrix.png')
+        fecha_actual = datetime.now()
+        # Formatear la fecha en el formato deseado (por ejemplo, "año_mes_dia_hora_minuto_segundo")
+        fecha = fecha_actual.strftime("%Y-%m-%d_%H-%M-%S")
+        path = save+f'confusion_matrix_{fecha}.png'
+        plt.savefig(path, dpi=300)
+        print(f'figura guardada {path}')
 
 
 if __name__ == "__main__":
