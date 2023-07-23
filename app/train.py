@@ -14,6 +14,7 @@ from collections import deque
 from processLIDC import Patient
 import datetime
 import cv2
+from unet import UNet
 random.seed(123)
 
 
@@ -168,6 +169,9 @@ def loss_function(output, target, loss_type = 1):
         intersection = torch.sum(output * target)
         union = torch.sum(output) + torch.sum(target) - intersection
         iou = intersection / (union + 1e-7)  # small constant to avoid division by zero
+        if union ==0:
+            print('Es 0!!!!')
+            iou=1
         loss_iou = 1 - iou
         weights = target*20+1
         loss = F.binary_cross_entropy(output, target, reduction='none')
@@ -381,6 +385,8 @@ if __name__=='__main__':
     parser.add_argument('--save_epochs', type=int, default=None)
     parser.add_argument('--model_extension', type=str, default='.pt')
     parser.add_argument('--loss_type', type=int, default=1)
+    parser.add_argument('--dropout_rate', type=float, default=0)
+
     # Obtener los argumentos proporcionados por el usuario
     args = parser.parse_args()
     checks_alright(args)
@@ -395,11 +401,23 @@ if __name__=='__main__':
     archivo.close()
     print('Descargando el modelo...')
     # Descargamos el modelo preentrenado:
-    model = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
-                       in_channels=3, out_channels=1, init_features=32, pretrained=True)
+    model = UNet(in_channels=3, out_channels=1, init_features=32, dropout_rate=args.dropout_rate)  # Reemplaza "TuModelo" por el nombre de tu clase de modelo
+    modelo_entrenado = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
+                        in_channels=3, out_channels=1, init_features=32, pretrained=True)
+
+
+    # Cargar los pesos del modelo entrenado en el modelo aleatorio
+    model.load_state_dict(modelo_entrenado.state_dict())
     if torch.cuda.is_available():
-        device = torch.device('cuda')
-        model = model.to(device)
+        print('moviendo a la grafica...')
+        try:
+            device = torch.device('cuda')
+            model = model.to(device)
+            print('INFO: Modelo funcionando en la GPU')
+        except:
+            print('WARNING: Hay fallo al trasladar a la grafica, el enrteno ira muy lento.'\
+                  'Soluciones: \n 1. Reinicia el ordenador \n 2. Prueba NVIDIA-SMI')
+    
     
     # Llamar a la función train con los argumentos
     train(model, n_epochs=args.n_epochs, batch_size=args.batch_size, val_split=args.val_split,

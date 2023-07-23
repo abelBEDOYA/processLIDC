@@ -6,7 +6,7 @@ import torch.nn as nn
 
 class UNet(nn.Module):
 
-    def __init__(self, in_channels=3, out_channels=1, init_features=32):
+    def __init__(self, in_channels=3, out_channels=1, init_features=32, dropout_rate=0.0):
         super(UNet, self).__init__()
 
         features = init_features
@@ -42,6 +42,8 @@ class UNet(nn.Module):
             in_channels=features, out_channels=out_channels, kernel_size=1
         )
 
+        self.dropout = nn.Dropout2d(dropout_rate)
+
     def forward(self, x):
         enc1 = self.encoder1(x)
         enc2 = self.encoder2(self.pool1(enc1))
@@ -52,15 +54,19 @@ class UNet(nn.Module):
 
         dec4 = self.upconv4(bottleneck)
         dec4 = torch.cat((dec4, enc4), dim=1)
+        dec4 = self.dropout(dec4)  # Apply Dropout
         dec4 = self.decoder4(dec4)
         dec3 = self.upconv3(dec4)
         dec3 = torch.cat((dec3, enc3), dim=1)
+        dec3 = self.dropout(dec3)  # Apply Dropout
         dec3 = self.decoder3(dec3)
         dec2 = self.upconv2(dec3)
         dec2 = torch.cat((dec2, enc2), dim=1)
+        dec2 = self.dropout(dec2)  # Apply Dropout
         dec2 = self.decoder2(dec2)
         dec1 = self.upconv1(dec2)
         dec1 = torch.cat((dec1, enc1), dim=1)
+        dec1 = self.dropout(dec1)  # Apply Dropout
         dec1 = self.decoder1(dec1)
         return torch.sigmoid(self.conv(dec1))
 
