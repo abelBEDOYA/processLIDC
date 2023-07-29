@@ -1,4 +1,7 @@
 *.png
 *.jpg
 *.pth
-*.py*
+*.pyc
+*.pt
+./trainings/*
+*.txt
