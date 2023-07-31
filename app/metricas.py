@@ -20,24 +20,27 @@ def get_confusion_matrix(id_patient, model, threshold = 0.5, batch = 10):
     images, mask = patient.get_tensors(scaled = False)
     mask = mask.cpu().detach().numpy()
     n_slices = mask.shape[0]
-    slices = (0, batch-1)
-    prediccion = patient.predict(model, slices=slices, scaled=True, gpu = True)
-    prediccion = np.where(prediccion >= threshold, 1, 0)[:,0,:,:]
-    for i in tqdm(range(batch, n_slices, batch)):
-        
-        slices = (i, i+batch-1)
+    prediccion = patient.predict(model, slices=(0,), scaled=True, gpu = True)
+    prediccion = np.where(prediccion >= threshold, 1, 0)[0,:,:]
+    mask_label = mask[0]
+    for i in tqdm(range(1,n_slices)):
+        if np.all(mask[i] == 0):
+            # print('batch_saltado')
+            continue
+
         # print(i+batch, n_slices)
-        pred = patient.predict(model, slices=slices, scaled=True, gpu = True)
-        pred_bin = np.where(pred >= threshold, 1, 0)[:,0,:,:]
+        pred = patient.predict(model, slices=(i,), scaled=True, gpu = True)
+        # print(pred.shape)
+        pred_bin = np.where(pred >= threshold, 1, 0)[0,:,:]
         prediccion = np.concatenate((prediccion, pred_bin), axis=0)
-        print(f'{i}', prediccion.shape)
-        
+        # print(f'{i}', prediccion.shape)
+        mask_label = np.concatenate((mask_label, mask[i]), axis=0)
+        # print(mask_label.shape, prediccion.shape)
 
     # label = mask[slices[0]: slices[-1]+1].flatten()
-    label = mask.flatten()
-
-    
+    label = mask_label.flatten()
     prediccion = prediccion.flatten()
+    
     print(label.shape, prediccion.shape)
     cm_ = confusion_matrix(label, prediccion, labels=(0,1))
     cm = cm + np.array(cm_)
