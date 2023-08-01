@@ -23,7 +23,7 @@ def contar_tumores_imagen(mask_b, iou_threshold=0.3):
 
 
 def get_confusion_matrix2(patient_list, threshold=0.4):
-
+    n_tumors = 0
     for patient_id in tqdm(patient_list):
         print('patient_id', patient_id)
         patient = Patient(patient_id)
@@ -32,7 +32,7 @@ def get_confusion_matrix2(patient_list, threshold=0.4):
         n_slices = mask.shape[0]
         mask = mask.cpu().detach().numpy()
         mask = mask.astype('int8')*255
-        n_tumors = 0
+        
         for i in range(n_slices):
             if np.all(mask[i] == 0):
                 continue
