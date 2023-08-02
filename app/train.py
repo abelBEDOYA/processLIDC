@@ -177,7 +177,7 @@ def loss_function(output, target, loss_type = 1):
         weights = target*20+1
         loss = F.binary_cross_entropy(output, target, reduction='none')
         weighted_loss = loss * weights
-        loss_total = loss_iou + torch.sum(weighted_loss)/6
+        loss_total = 4000*loss_iou + torch.sum(weighted_loss)/6
         return loss_total
     elif loss_type == 3:
         
