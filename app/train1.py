@@ -176,7 +176,7 @@ def loss_function(output, target, loss_type = 1):
         iou = intersection / (union + 1e-7)  # small constant to avoid division by zero
         if union ==0:
             print('Es 0!!!!')
-            iou=1
+            iou=torch.tensor(1)
         loss_iou = 1 - iou
         weights = target*20+1
         loss = F.binary_cross_entropy(output, target, reduction='none')
@@ -191,6 +191,10 @@ def loss_function(output, target, loss_type = 1):
         intersection = torch.sum(output * target)
         union = torch.sum(output) + torch.sum(target) - intersection
         iou = intersection / (union + 1e-7)  # small constant to avoid division by zero
+        
+        if union ==0:
+            print('Es 0!!!!')
+            iou=torch.tensor(1)
         loss_iou = 1 - iou
         # print(loss_iou)
         return loss_iou
@@ -306,9 +310,9 @@ def train(model, n_epochs:int =4,
                 output = model(data)
                 # Calcular pérdida
                 loss, iou, wbce = loss_function(output[:,0], target, loss_type=loss_type)
-                print('iou')
+                print('iou', iou)
                 iou_epoch = np.append(iou_epoch, iou.cpu().detach().numpy())
-                print('wbce')
+                print('wbce', wbce)
                 wbce_epoch = np.append(wbce_epoch, wbce.cpu().detach().numpy())
                 # print('\t loss', loss, 'torch.mean(target):', torch.mean(target))
                 # # # Calcular gradientes y actualizar parámetros
