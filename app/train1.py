@@ -340,6 +340,8 @@ def train(model, n_epochs:int =4,
             patient_loss_history = np.append(patient_loss_history, loss_patient)
             tiempo_paciente = time.time()-inicio
             tiempos_paciente.append(tiempo_paciente)
+        iou_history = np.append(iou_history, np.mean(iou_epoch))
+        wbce_history = np.append(wbce_history, np.mean(wbce_epoch))
             
         epoch_loss_history = np.append(epoch_loss_history, np.mean(np.array(loss_patient)))
         print('Fin epoca {}: {}'.format(epoch+1, get_tiempo()))
