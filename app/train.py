@@ -413,13 +413,13 @@ if __name__=='__main__':
     archivo.close()
     print('Descargando el modelo...')
     # Descargamos el modelo preentrenado:
-    model = UNet(in_channels=3, out_channels=1, init_features=32, dropout_rate=args.dropout_rate) 
-    modelo_entrenado = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
+    # model = UNet(in_channels=3, out_channels=1, init_features=32, dropout_rate=args.dropout_rate) 
+    modelo = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
                         in_channels=3, out_channels=1, init_features=32, pretrained=True)
 
 
     # Cargar los pesos del modelo entrenado en el modelo aleatorio
-    model.load_state_dict(modelo_entrenado.state_dict())
+    # model.load_state_dict(modelo_entrenado.state_dict())
     if torch.cuda.is_available():
         print('moviendo a la grafica...')
         try:
