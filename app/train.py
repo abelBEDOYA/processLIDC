@@ -414,7 +414,7 @@ if __name__=='__main__':
     print('Descargando el modelo...')
     # Descargamos el modelo preentrenado:
     # model = UNet(in_channels=3, out_channels=1, init_features=32, dropout_rate=args.dropout_rate) 
-    modelo = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
+    model = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
                         in_channels=3, out_channels=1, init_features=32, pretrained=True)
 
 
