@@ -159,13 +159,19 @@ class Patient():
         
         if plot == True:
             plt.hist(h_antes)
-            plt.title('sin escalar')
+            plt.title('Sin escalar')
+            plt.ylabel('nº voxeles')
+            plt.xlabel('intensidad de gris')
+            plt.savefig('sin_escalado.png', dpi=500)
             plt.yscale('log')
             plt.show()
                 
             plt.hist(h_despues)
-            plt.title('escalado')
+            plt.title('Escalado')
+            plt.ylabel('nº voxeles')
+            plt.xlabel('intensidad de gris')
             plt.yscale('log')
+            plt.savefig('escalado.png', dpi=500)
             plt.show()
             
             
@@ -238,7 +244,7 @@ class Patient():
         
         plt.show()
 
-    def get_tensors(self, scaled = True):
+    def get_tensors(self, scaled = True, channels_z = True):
         if scaled is False:
             vol = np.transpose(self.vol, [2, 0, 1]).astype(
             np.float32)  # each row will be a slice
@@ -268,9 +274,32 @@ class Patient():
             images = avg(t_vol)
             masks = torch.round(avg(t_mask))
             shape = images.shape
-            images = images.view(shape[0], 1, shape[1], shape[2])
-            images = images.repeat((1, 3, 1, 1))
-            return images, masks
+            
+            # images = images.view(shape[0], 1, shape[1], shape[2])
+            # images = images.repeat((1, 3, 1, 1))
+            # return images, masks
+            if channels_z:
+                # print('funcion', start1-start)
+                images_new = torch.empty((shape[0], 3, 256, 256), dtype=images.dtype)
+                for i in range(shape[0]):
+                    if i == 0:
+                        images_new[i, 0, :, :] = images[i, :, :]
+                    else:
+                        # print('estoy aqui')
+                        images_new[i, 0, :, :] = images[i - 1, :, :]
+                    # print('cuidao', i)
+                    images_new[i, 1, :, :] = images[i, :, :]
+                    if i == shape[0]-1:
+                        # print('estoy dentro')
+                        images_new[i, 2, :, :] = images[i, :, :]
+                    else:
+                        images_new[i, 2, :, :] = images[i + 1, :, :]
+                # print('a mano', time.time()-start1)
+                return images_new, masks
+            else:
+                images = images.reshape(shape[0], 1, shape[1], shape[2])
+                images = images.repeat((1,3,1, 1))
+                return images, masks
             
         
         
