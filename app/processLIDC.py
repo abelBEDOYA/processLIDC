@@ -283,17 +283,17 @@ class Patient():
                 images_new = torch.empty((shape[0], 3, 256, 256), dtype=images.dtype)
                 for i in range(shape[0]):
                     if i == 0:
-                        images_new[i, 0, :, :] = images[i, :, :]
+                        images_new[i, 0, :, :] = images[i, :, :]*0
                     else:
                         # print('estoy aqui')
-                        images_new[i, 0, :, :] = images[i - 1, :, :]
+                        images_new[i, 0, :, :] = images[i, :, :]-images[i - 1, :, :]
                     # print('cuidao', i)
                     images_new[i, 1, :, :] = images[i, :, :]
                     if i == shape[0]-1:
                         # print('estoy dentro')
-                        images_new[i, 2, :, :] = images[i, :, :]
+                        images_new[i, 2, :, :] = images[i, :, :]*0
                     else:
-                        images_new[i, 2, :, :] = images[i + 1, :, :]
+                        images_new[i, 2, :, :] = images[i, :, :]-images[i + 1, :, :]
                 # print('a mano', time.time()-start1)
                 return images_new, masks
             else:
