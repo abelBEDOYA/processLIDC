@@ -215,6 +215,8 @@ def get_confusion_matrix2(patients_list):
         print(patient_id)
         mask_predicciones, mask_labels = get_arrays(patient_id)
         # print(mask_predicciones.shape, mask_labels.shape)
+        if np.all(mask_labels==0):
+            continue
         mat =calculate_confusion_matrix(mask_predicciones, mask_labels)
         confusion_matrix_total = sumar_diccionarios(confusion_matrix_total, mat)
     return confusion_matrix_total
