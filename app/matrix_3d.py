@@ -301,7 +301,7 @@ print('Cargando el modelo...', flush=True)
 MODEL = torch.jit.load(args.model)
 MODEL.to('cuda')
 MODEL.eval()
-patients_list = ['LIDC-IDRI-0186', 'LIDC-IDRI-0001', 'LIDC-IDRI-0002', 'LIDC-IDRI-0013', 'LIDC-IDRI-0170', 'LIDC-IDRI-0191']
+# patients_list = ['LIDC-IDRI-0186', 'LIDC-IDRI-0001', 'LIDC-IDRI-0002', 'LIDC-IDRI-0013', 'LIDC-IDRI-0170', 'LIDC-IDRI-0191']
 THRESHOLD = args.threshold
 IOU_THRESHOLD = args.iou_threshold
 mat = get_confusion_matrix2(patients_list)
