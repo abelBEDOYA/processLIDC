@@ -193,6 +193,8 @@ def get_arrays(id_patient):
 
     # # Mostrar el gráfico
     # fig.show()
+    if len(mask_labels) ==0:
+        return np.array([0]), np.array([0])
     return np.stack(mask_predicciones), np.stack(mask_labels)
 
 def sumar_diccionarios(dic1, dic2):
