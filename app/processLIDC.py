@@ -194,11 +194,11 @@ class Patient():
             slices = (0,-1)
         if torch.cuda.is_available() and gpu:
             device = torch.device('cuda')
-            images, mask = images[slices[0]:slices[-1]+1,:,:].to(device), mask[slices[0]:slices[-1],:,:].to(device)
+            images = images[slices[0]:slices[-1]+1,:,:].to(device)
             pred = model(images)
         else:
             device = torch.device('cpu')
-            images, mask = images[slices[0]:slices[-1]+1,:,:].to(device), mask[slices[0]:slices[-1],:,:].to(device)
+            images = images[slices[0]:slices[-1]+1,:,:].to(device)
             pred = model(images)
         if gpu:
             pred = pred.cpu().detach().numpy()
@@ -244,7 +244,7 @@ class Patient():
         
         plt.show()
 
-    def get_tensors(self, scaled = True, channels_z = True):
+    def get_tensors(self, scaled = True, channels_z = False):
         if scaled is False:
             vol = np.transpose(self.vol, [2, 0, 1]).astype(
             np.float32)  # each row will be a slice
