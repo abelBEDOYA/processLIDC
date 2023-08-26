@@ -24,7 +24,8 @@ def calculate_iou(clusters_pred, clusters_ann):
 def calculate_confusion_matrix(mask_pred, mask_ann):
     clusters_pred, n_clus_pred = ndimage.label(ndimage.binary_dilation(mask_pred, structure=np.ones((3,3,3))))
     clusters_ann, n_clus_ann = ndimage.label(ndimage.binary_dilation(mask_ann, structure=np.ones((3,3,3))))
-    # colors = ['red', 'orange', 'yellow', 'green', 'black', 'purple', 'pink', 'brown']
+    # colors = ['red', 'orange', 'yellow', 'green', 'black', 'purple', 'pink', 'brown', 'cyan', 'lime', 'violet', 'gray', 'green', 
+    #           'red', 'orange', 'yellow', 'green', 'black', 'purple', 'pink', 'brown', 'cyan', 'lime', 'violet', 'gray']
     # fig = go.Figure()
     # for i in range(n_clus_ann):
     #     i= i +1
@@ -47,6 +48,21 @@ def calculate_confusion_matrix(mask_pred, mask_ann):
     #     ),
     #         name=f'Cluster: {i}'
     #     ))
+    # condition_indices_pred = np.where(clusters_pred > 0.5)
+    # selected_indices_pred = np.array(condition_indices_pred).T 
+    # fig.add_trace(go.Scatter3d(
+    #     x=selected_indices_pred[:, 0]+0.2,
+    #     y=selected_indices_pred[:, 1]+0.2,
+    #     z=selected_indices_pred[:, 2]+0.2,
+    #     mode='markers',
+    #     marker=dict(
+    #         symbol='cross', 
+    #         size=4,  # Cambiamos el tamaño a 4 (puedes ajustar este valor)
+    #         color='blue',  
+    #         opacity=0.8
+    # ),
+    #     name='Conjunto Predicho'
+    # ))
     # # # Configurar el diseño del gráfico
     # fig.update_layout(scene=dict(
     #     xaxis_title='x',
@@ -84,9 +100,9 @@ def calculate_confusion_matrix(mask_pred, mask_ann):
     pred_pequenios = [] 
     for i_clus_pred in range(n_clus_pred):
         i_clus_pred+=1
-        if 100>np.sum(clusters_pred == i_clus_pred):
+        if 40>np.sum(clusters_pred == i_clus_pred):
             pred_pequenios.append(i_clus_pred)
-    
+    # print('\n pred_pequenios', pred_pequenios)
     n_pred_intersect_total = []
     for i_clus_ann in range(n_clus_ann):
         i_clus_ann = i_clus_ann+1
@@ -103,6 +119,7 @@ def calculate_confusion_matrix(mask_pred, mask_ann):
         if iou > IOU_THRESHOLD:
             true_positive+=1
         else:
+            # print('\n', 'holaa: ', iou, '\n')
             false_negative+=1
 
     pred_clusses_no_iou = [i for i in range(n_clus_pred) if not i in n_pred_intersect_total and not i in pred_pequenios]
@@ -116,6 +133,7 @@ def calculate_confusion_matrix(mask_pred, mask_ann):
         'FN': false_negative
     }
     # print(confusion_matrix)
+
     return confusion_matrix
 
 
@@ -131,6 +149,8 @@ def get_arrays(id_patient):
         slices.append(i)
     mask_predicciones = []
     mask_labels = []
+    if len(slices)==0:
+        return np.array([[[0], [0]], [[0], [0]]]), np.array([[[0], [0]], [[0], [0]]])
     for s in tqdm(slices):
         prediccion = patient.predict(MODEL, slices=(s,), scaled=True, gpu = True)
         # print(prediccion.shape)
@@ -144,7 +164,9 @@ def get_arrays(id_patient):
         #     plt.show()
         mask_predicciones.append(prediccion)
         mask_labels.append( mask[s])
-        
+    # if np.all(mask_labels==0):
+    #     return np.array([[[0], [0]], [[0], [0]]]), np.array([[[0], [0]], [[0], [0]]])
+
     # arrayyy = np.stack(mask_labels)
     # arrayyy_pred = np.stack(mask_predicciones)
     # condition_indices = np.where(arrayyy > 0.5)
@@ -153,7 +175,7 @@ def get_arrays(id_patient):
     # selected_indices = np.array(condition_indices).T  # Transponer los índices para obtener (n_puntos, 3)
     # selected_indices_pred = np.array(condition_indices_pred).T  # Transponer los índices para obtener (n_puntos, 3)
     # # Crear un scatter plot utilizando los índices como coordenadas
-    # # fig = go.Figure()
+    # fig = go.Figure()
 
     # # # # # Agregar traza para los puntos con los índices originales
     # fig.add_trace(go.Scatter3d(
@@ -193,8 +215,6 @@ def get_arrays(id_patient):
 
     # # Mostrar el gráfico
     # fig.show()
-    if len(mask_labels) ==0:
-        return np.array([0]), np.array([0])
     return np.stack(mask_predicciones), np.stack(mask_labels)
 
 def sumar_diccionarios(dic1, dic2):
@@ -308,6 +328,7 @@ MODEL.eval()
 # patients_list = ['LIDC-IDRI-0186', 'LIDC-IDRI-0001', 'LIDC-IDRI-0002', 'LIDC-IDRI-0013', 'LIDC-IDRI-0170', 'LIDC-IDRI-0191']
 THRESHOLD = args.threshold
 IOU_THRESHOLD = args.iou_threshold
+# patients_list = ['LIDC-IDRI-0604']
 mat = get_confusion_matrix2(patients_list)
 plot_confusion_matrix(mat, save= args.save)
     
