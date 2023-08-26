@@ -1,0 +1,1 @@
+python3 matrix_3d.py --val --model "../trainings/training_wbce_iou_8batch_40_3iou_dropout/model-epoch21.pt" --save './matrix_3d_pruebas/'  --path2dataset '../../manifest-1675801116903/LIDC-IDRI/' --valsplit 0.1 --threshold 0.2 --iou_threshold 0.2
