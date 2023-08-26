@@ -190,7 +190,7 @@ def loss_function(output, target, loss_type = 1):
     elif loss_type == 4:
         weights = target*20+1
         loss = F.binary_cross_entropy(output, target, reduction='none')
-        weighted_loss = loss * weights
+        weighted_loss = loss * weights/100
         return torch.sum(weighted_loss)
     else:
         print('Indica una loss function que sea 1, 2 o 3. Has indicado loss = {}'.format(loss_type))
@@ -236,7 +236,7 @@ def train(model, n_epochs:int =4,
     save_patients_train_val_csv(train_patients, val_patients, path2savefiles)
 
     # Definir optimizador
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0000005)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.000001)
 
 
     loss_batch = np.array([])
@@ -413,13 +413,13 @@ if __name__=='__main__':
     archivo.close()
     print('Descargando el modelo...')
     # Descargamos el modelo preentrenado:
-    # model = UNet(in_channels=3, out_channels=1, init_features=32, dropout_rate=args.dropout_rate) 
-    model = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
+    model = UNet(in_channels=3, out_channels=1, init_features=32, dropout_rate=args.dropout_rate) 
+    modelo_entrenado = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
                         in_channels=3, out_channels=1, init_features=32, pretrained=True)
 
 
     # Cargar los pesos del modelo entrenado en el modelo aleatorio
-    # model.load_state_dict(modelo_entrenado.state_dict())
+    model.load_state_dict(modelo_entrenado.state_dict())
     if torch.cuda.is_available():
         print('moviendo a la grafica...')
         try:
