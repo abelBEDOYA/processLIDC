@@ -212,7 +212,7 @@ def loss_function(output, target, loss_type = 1):
         # print(loss_iou)
         return loss_iou
     elif loss_type == 4:
-        weights = target*1+1
+        weights = target*20+1
         loss = F.binary_cross_entropy(output, target, reduction='none')
         weighted_loss = loss * weights
         no_nodulo = torch.sum(weighted_loss*(-1*target+1))
@@ -261,8 +261,8 @@ def train(model, n_epochs:int =4,
 
     train_patients, val_patients = train_val_split(patients, val_split)
     save_patients_train_val_csv(train_patients, val_patients, path2savefiles)
-    # train_patients = ['LIDC-IDRI-0011', 'LIDC-IDRI-0015','LIDC-IDRI-0135', 'LIDC-IDRI-0170']
-    # val_patients = ['LIDC-IDRI-0002', 'LIDC-IDRI-0001', 'LIDC-IDRI-0013']
+    train_patients = ['LIDC-IDRI-0011', 'LIDC-IDRI-0015','LIDC-IDRI-0135', 'LIDC-IDRI-0170']
+    val_patients = ['LIDC-IDRI-0002', 'LIDC-IDRI-0001', 'LIDC-IDRI-0013']
     # Definir optimizador
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
@@ -288,12 +288,13 @@ def train(model, n_epochs:int =4,
         random.shuffle(train_patients)
         len_train_patients = len(train_patients)
         tqdm_train_patients = tqdm(train_patients,leave=False, position=0)
-        nodulo_epoch = np.array([])
-        no_nodulo_epoch = np.array([])
+        nodulo_history_ = np.array([])
+        no_nodulo_history_ = np.array([])
         for i, id_pat in enumerate(tqdm_train_patients):
             inicio = time.time()
             time.sleep(1)
-            
+            nodulo_epoch = np.array([])
+            no_nodulo_epoch = np.array([])
             tqdm_train_patients.set_description('Epoch: {}/{}. {}. Rate {} s/p. {}/{}. {}. Progreso de la epoca:'.format(epoch+1, n_epochs, get_tiempo(), 
                                                                                                            round(sum(tiempos_paciente)/5, 2),
                                                                                                            i,
@@ -343,8 +344,8 @@ def train(model, n_epochs:int =4,
                 optimizer.step()
                 loss_batch = np.append(loss_batch, total.item())
                 batch_loss_history = np.append(batch_loss_history, total.item())
-            iou_history = np.append(nodulo_history, np.mean(nodulo_epoch))
-            wbce_history = np.append(no_nodulo_history, np.mean(no_nodulo_epoch))
+            nodulo_history_ = np.append(nodulo_history, np.mean(nodulo_epoch))
+            no_nodulo_history_ = np.append(no_nodulo_history, np.mean(no_nodulo_epoch))
             del data
             del target
             del dataset
@@ -357,8 +358,8 @@ def train(model, n_epochs:int =4,
             patient_loss_history = np.append(patient_loss_history, loss_patient)
             tiempo_paciente = time.time()-inicio
             tiempos_paciente.append(tiempo_paciente)
-        nodulo_history = np.append(nodulo_history, np.mean(nodulo_epoch))
-        no_nodulo_history = np.append(no_nodulo_history, np.mean(no_nodulo_epoch))
+        nodulo_history = np.append(nodulo_history, np.mean(nodulo_history_))
+        no_nodulo_history = np.append(no_nodulo_history, np.mean(no_nodulo_history_))
             
         epoch_loss_history = np.append(epoch_loss_history, np.mean(np.array(loss_patient)))
         print('Fin epoca {}: {}'.format(epoch+1, get_tiempo()))
