@@ -261,8 +261,8 @@ def train(model, n_epochs:int =4,
 
     train_patients, val_patients = train_val_split(patients, val_split)
     save_patients_train_val_csv(train_patients, val_patients, path2savefiles)
-    train_patients = ['LIDC-IDRI-0011', 'LIDC-IDRI-0015','LIDC-IDRI-0135', 'LIDC-IDRI-0170']
-    val_patients = ['LIDC-IDRI-0002', 'LIDC-IDRI-0001', 'LIDC-IDRI-0013']
+    # train_patients = ['LIDC-IDRI-0011', 'LIDC-IDRI-0015','LIDC-IDRI-0135', 'LIDC-IDRI-0170']
+    # val_patients = ['LIDC-IDRI-0002', 'LIDC-IDRI-0001', 'LIDC-IDRI-0013']
     # Definir optimizador
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
