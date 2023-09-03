@@ -43,11 +43,11 @@ def get_val_loss(model, val_patients, batch_size=4, loss_type = 1):
     if len(val_patients)==0:
         return 0
 
-    loss_batch = np.array([])
     batch_loss_history = np.array([])
     loss_patient = np.array([])
-    nodulo_batch = np.array([])
-    no_nodulo_batch = np.array([])
+    nodulo_patient = np.array([])
+    no_nodulo_patient = np.array([])
+
     print('Realizando validacion...')
     tqdm_val_patients = tqdm(val_patients,leave=False, position=0)
     for id_pat in tqdm_val_patients:
@@ -75,6 +75,8 @@ def get_val_loss(model, val_patients, batch_size=4, loss_type = 1):
 
         train_loader = DataLoader(dataset,batch_size=batch_size, shuffle=True)
         loss_batch = np.array([])
+        nodulo_batch = np.array([])
+        no_nodulo_batch = np.array([])
         for batch_idx, (data, target) in enumerate(train_loader):
             if torch.mean(target)==0:
                 # print('es 0')
@@ -92,10 +94,12 @@ def get_val_loss(model, val_patients, batch_size=4, loss_type = 1):
                 print('Paciente sin tumor (es posible, pacient=988 por ejemplo). Paciente saltado')
                 continue
         loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
+        nodulo_patient = np.append(nodulo_patient, np.mean(nodulo_batch))
+        no_nodulo_patient = np.append(no_nodulo_patient, np.mean(no_nodulo_batch))
         # print('id_patient', id_pat, 'loss_patient', loss_patient)
     val_mean_loss = np.mean(loss_patient)
-    val_mean_loss_nodulo = np.mean(nodulo_batch)
-    val_mean_loss_no_nodulo = np.mean(no_nodulo_batch)
+    val_mean_loss_nodulo = np.mean(nodulo_patient)
+    val_mean_loss_no_nodulo = np.mean(no_nodulo_patient)
     return val_mean_loss, val_mean_loss_nodulo, val_mean_loss_no_nodulo
 
 
@@ -218,6 +222,9 @@ def loss_function(output, target, loss_type = 1):
         no_nodulo = torch.sum(weighted_loss*(-1*target+1))
         nodulo = torch.sum(weighted_loss*target)
         total = torch.sum(weighted_loss)
+        if total<nodulo:
+            print(total.item(), nodulo.item())
+            print('\n \n \n ')
         return total, nodulo, no_nodulo
     else:
         print('Indica una loss function que sea 1, 2 o 3. Has indicado loss = {}'.format(loss_type))
@@ -267,10 +274,9 @@ def train(model, n_epochs:int =4,
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
 
-    loss_batch = np.array([])
+
     batch_loss_history = np.array([])
 
-    loss_patient = np.array([])
     patient_loss_history = np.array([])
 
     
@@ -288,13 +294,14 @@ def train(model, n_epochs:int =4,
         random.shuffle(train_patients)
         len_train_patients = len(train_patients)
         tqdm_train_patients = tqdm(train_patients,leave=False, position=0)
-        nodulo_history_ = np.array([])
-        no_nodulo_history_ = np.array([])
+        nodulo_patient = np.array([])
+        no_nodulo_patient = np.array([])
         for i, id_pat in enumerate(tqdm_train_patients):
             inicio = time.time()
             time.sleep(1)
-            nodulo_epoch = np.array([])
-            no_nodulo_epoch = np.array([])
+            nodulo_batch = np.array([])
+            no_nodulo_batch = np.array([])
+            loss_batch = np.array([])
             tqdm_train_patients.set_description('Epoch: {}/{}. {}. Rate {} s/p. {}/{}. {}. Progreso de la epoca:'.format(epoch+1, n_epochs, get_tiempo(), 
                                                                                                            round(sum(tiempos_paciente)/5, 2),
                                                                                                            i,
@@ -319,7 +326,7 @@ def train(model, n_epochs:int =4,
             dataset = TensorDataset(imgs, mask)
 
             train_loader = DataLoader(dataset,batch_size=batch_size, shuffle=True)
-            loss_batch = np.array([])
+            
             for batch_idx, (data, target) in enumerate(train_loader):
                 if torch.all(target == 0):
                     # print('\t es 0')
@@ -331,11 +338,11 @@ def train(model, n_epochs:int =4,
                 total, nodulo, no_nodulo = loss_function(output[:,0], target, loss_type=loss_type)
                 print('----')
                 print('total', total.item())
-                nodulo_epoch = np.append(nodulo_epoch, nodulo.cpu().detach().numpy())
-                print('nodulo', nodulo_epoch[-1])
+                nodulo_batch = np.append(nodulo_batch, nodulo.cpu().detach().numpy())
+                print('nodulo', nodulo_batch[-1])
 
-                no_nodulo_epoch = np.append(no_nodulo_epoch, no_nodulo.cpu().detach().numpy())
-                print('no_nodulo', no_nodulo_epoch[-1])
+                no_nodulo_batch = np.append(no_nodulo_batch, no_nodulo.cpu().detach().numpy())
+                print('no_nodulo', no_nodulo_batch[-1])
                 print('----')
                 # print('\t loss', loss, 'torch.mean(target):', torch.mean(target))
                 # # # Calcular gradientes y actualizar parámetros
@@ -344,8 +351,8 @@ def train(model, n_epochs:int =4,
                 optimizer.step()
                 loss_batch = np.append(loss_batch, total.item())
                 batch_loss_history = np.append(batch_loss_history, total.item())
-            nodulo_history_ = np.append(nodulo_history, np.mean(nodulo_epoch))
-            no_nodulo_history_ = np.append(no_nodulo_history, np.mean(no_nodulo_epoch))
+            nodulo_patient = np.append(nodulo_patient, np.mean(nodulo_batch))
+            no_nodulo_patient = np.append(no_nodulo_patient, np.mean(no_nodulo_batch))
             del data
             del target
             del dataset
@@ -354,12 +361,14 @@ def train(model, n_epochs:int =4,
                 print('Paciente sin tumor (es posible, pacient=988 por ejemplo). Paciente saltado')
                 continue
             loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
+            if loss_patient[-1]< nodulo_patient[-1]:
+                print('\n \n \n loss_patient[-1]< nodulo_patient[-1] \n \n \n ')
             # print('id_patient', id_pat, 'loss_patient', loss_patient)
             patient_loss_history = np.append(patient_loss_history, loss_patient)
             tiempo_paciente = time.time()-inicio
             tiempos_paciente.append(tiempo_paciente)
-        nodulo_history = np.append(nodulo_history, np.mean(nodulo_history_))
-        no_nodulo_history = np.append(no_nodulo_history, np.mean(no_nodulo_history_))
+        nodulo_history = np.append(nodulo_history, np.mean(nodulo_patient))
+        no_nodulo_history = np.append(no_nodulo_history, np.mean(no_nodulo_patient))
             
         epoch_loss_history = np.append(epoch_loss_history, np.mean(np.array(loss_patient)))
         print('Fin epoca {}: {}'.format(epoch+1, get_tiempo()))
