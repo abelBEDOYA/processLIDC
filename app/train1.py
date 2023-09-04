@@ -268,8 +268,8 @@ def train(model, n_epochs:int =4,
 
     train_patients, val_patients = train_val_split(patients, val_split)
     save_patients_train_val_csv(train_patients, val_patients, path2savefiles)
-    train_patients = ['LIDC-IDRI-0011', 'LIDC-IDRI-0015','LIDC-IDRI-0135', 'LIDC-IDRI-0170']
-    val_patients = ['LIDC-IDRI-0002', 'LIDC-IDRI-0001', 'LIDC-IDRI-0013']
+    # train_patients = ['LIDC-IDRI-0011', 'LIDC-IDRI-0015','LIDC-IDRI-0135', 'LIDC-IDRI-0170']
+    # val_patients = ['LIDC-IDRI-0002', 'LIDC-IDRI-0001', 'LIDC-IDRI-0013']
     # Definir optimizador
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
@@ -351,8 +351,6 @@ def train(model, n_epochs:int =4,
                 optimizer.step()
                 loss_batch = np.append(loss_batch, total.item())
                 batch_loss_history = np.append(batch_loss_history, total.item())
-            nodulo_patient = np.append(nodulo_patient, np.mean(nodulo_batch))
-            no_nodulo_patient = np.append(no_nodulo_patient, np.mean(no_nodulo_batch))
             del data
             del target
             del dataset
@@ -360,6 +358,8 @@ def train(model, n_epochs:int =4,
             if len(loss_batch)==0:
                 print('Paciente sin tumor (es posible, pacient=988 por ejemplo). Paciente saltado')
                 continue
+            nodulo_patient = np.append(nodulo_patient, np.mean(nodulo_batch))
+            no_nodulo_patient = np.append(no_nodulo_patient, np.mean(no_nodulo_batch))
             loss_patient = np.append(loss_patient, np.mean(np.array(loss_batch)))
             if loss_patient[-1]< nodulo_patient[-1]:
                 print('\n \n \n loss_patient[-1]< nodulo_patient[-1] \n \n \n ')
