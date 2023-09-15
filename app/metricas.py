@@ -61,7 +61,7 @@ def get_confusion_matrix_list(id_patient, model, threshold = 0.5, batch = 10):
             cm = cm + get_confusion_matrix(id, model, threshold =threshold, batch = batch)
         return cm
 
-def plotNsave(cm, save = None, show = True):
+def plotNsave(cm, save = None, show = True, thres=0.5):
     fig, ax = plt.subplots()
 
     # Crear mapa de calor utilizando seaborn
@@ -72,7 +72,7 @@ def plotNsave(cm, save = None, show = True):
     ax.set_ylabel("Etiqueta Verdadera")
 
     # Añadir título
-    ax.set_title("Confusion Matrix, area")
+    ax.set_title(f"Confusion Matrix, pixel {thres}")
     if show:
         # Mostrar la figura
         plt.show()
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     model.to('cuda')
     model.eval()
     cm = get_confusion_matrix_list(patients_list, model, args.threshold, args.batch)
-    plotNsave(cm, args.save, show=False)
+    plotNsave(cm, args.save, show=False, thres=args.threshold)
     
     
     
