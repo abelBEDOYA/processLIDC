@@ -1,5 +1,5 @@
 # processLIDC
-En este repo se incluyen metodos para la visualizacion, posible preprocesado y transformaciones del dataset LIDC, útil para tratar los datos y prepararlos para enternar con una UNET de pytorch.
+En este repo se incluyen metodos para la carga, procesado, visualizacion y transformación del dataset LIDC-IDRI para enternar una UNet de pytorch.
 
 ## USAGE:
 
@@ -9,26 +9,46 @@ Para que la clase `Patient` (o incluso sin ella) pueda acceder a un paciente de 
 
 2. La libreria de `pylidc` que realiza las queries ira a mirar a la ruta indicada en el archivo oculto:
 ```
-/home/abel/.pylidcrc
+   /home/abel/.pylidcrc
+   ```
+   En ella hay que indicar:
+
+   ```
+   path = /home/abel/TFM/manifest-1675801116903/LIDC-IDRI
+   ```
+
+   De tal forma que el comando proporcione lo siguiente: 
+   ```
+   ls /home/abel/TFM/manifest-1675801116903/LIDC-IDRI
+
+   OUTPUT: LIDC-IDRI-0002  LIDC-IDRI-0005
+   ... 
+   ```
+
+
+3. Clonar el repositorio:
 ```
-En ella hay que indicar:
-
-```
-path = /home/abel/TFM/manifest-1675801116903/LIDC-IDRI
+git clone https://github.com/abelBEDOYA/processLIDC
 ```
 
-De tal forma que el comando proporcione lo siguiente: 
-```
-ls /home/abel/TFM/manifest-1675801116903/LIDC-IDRI
+## Uso de la clase `Patient()`:
 
-OUTPUT: LIDC-IDRI-0002  LIDC-IDRI-0005
-... 
-```
+Instanciar la clase con `patient = Patient(id_patient)` con `id_patient="LIDC-IDRI-134"`.
 
-Para usar lo ofrecido en este repo es ncesario seguir los siguietnets dos pasos:
+- Estandarización de los valores las imagenes y procesado de etiquetas para obtener mascaras.
 
-1. `git clone https://github.com/abelBEDOYA/processLIDC`
 
-2. Seguir el notebook: `main.ipynb`. En el se muestran los metodos que se ofrecen la clase `Patient`.
+
+- Ejemplos de visualización y prediccion del modelo:
+
+`patient.imshow(slices=(67,), labels=True, model=model_loaded)`
+![Texto alternativo de la imagen](./assets/prediction.png)
+
+`patient.reconstruct_body(mask=True)`
+![reconstruct body](./assets/reconstruct_body.png)
+
+
+
+
 
 
