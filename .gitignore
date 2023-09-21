@@ -1,7 +1,9 @@
-*.png
+conf*.png
+loss*.png
 *.jpg
 *.pth
 *.pyc
 *.pt
 ./trainings/*
 *.txt
+*.pkl
